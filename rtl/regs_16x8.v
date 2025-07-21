@@ -8,10 +8,10 @@ module regs_16x8 (
     input wire [7:0] reg_write_data,
     // Lectura
     input wire [3:0] reg_read_addr_a,
-	 input wire [3:0] reg_read_addr_b,
+	input wire [3:0] reg_read_addr_b,
 	 
     output wire [7:0] reg_read_data_a,
-	 output wire [7:0] reg_read_data_b
+	output wire [7:0] reg_read_data_b
 );
 
     // === Banco de registros ===
@@ -19,12 +19,12 @@ module regs_16x8 (
 
     // === Lectura combinacional ===
     assign reg_read_data_a = registers[reg_read_addr_a];
-	 assign reg_read_data_b = registers[reg_read_addr_b];
+	assign reg_read_data_b = registers[reg_read_addr_b];
 
+    integer i;
     // === Escritura sincrónica ===
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            integer i;
             for (i = 0; i < 16; i = i + 1)
                 registers[i] <= 8'b0;
         end else if (reg_write_en) begin

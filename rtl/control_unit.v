@@ -46,9 +46,9 @@ module control_unit (
     reg [15:0] instruction;
     reg [1:0] fetch_state;
 
-    localparam FETCH_HIGH = 2'b00;
-    localparam FETCH_LOW  = 2'b01;
-    localparam EXECUTE    = 2'b10;
+    parameter FETCH_HIGH = 2'b00;
+    parameter FETCH_LOW  = 2'b01;
+    parameter EXECUTE    = 2'b10;
 
     // Flags
     reg carry_flag;
