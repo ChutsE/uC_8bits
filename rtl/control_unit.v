@@ -1,12 +1,12 @@
 module control_unit (
     input wire clk,
-    input wire rst,
+    input wire arst_n,
     input wire [7:0] mem_read_data,   // viene desde mem_data_in
     input wire [7:0] alu_result,
     input wire a_greater, a_equal, carry_out,
     input wire [7:0] in_gpio,
 
-    output reg [3:0] alu_opcode,
+    output reg [2:0] alu_opcode,
     output reg [7:0] alu_a,
     output reg [7:0] alu_b,
     output reg mem_write_en,
@@ -30,7 +30,7 @@ module control_unit (
 
     regs_16x8 regs_bank (
         .clk(clk),
-        .rst(rst),
+        .arst_n(arst_n),
         .reg_write_en(reg_write_en),
         .reg_write_addr(reg_write_addr),
         .reg_write_data(reg_write_data),
@@ -55,8 +55,8 @@ module control_unit (
     reg greater_flag;
     reg equal_flag;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             fetch_state   <= FETCH_HIGH;
             instr_high    <= 8'b0;
             instr_low     <= 8'b0;
@@ -116,7 +116,7 @@ module control_unit (
         mem_addr        = 8'b0;
         mem_write_data  = 8'b0;
         out_gpio        = 8'b0;
-        alu_opcode      = 4'b0000;
+        alu_opcode      = 3'b000;
         alu_a           = 8'b0;
         alu_b           = 8'b0;
         reg_write_addr  = reg_dst;
@@ -127,7 +127,7 @@ module control_unit (
             reg_read_addr_b = reg_b;
             alu_a           = reg_read_data_a;
             alu_b           = reg_read_data_b;
-            alu_opcode      = opcode;
+            alu_opcode      = opcode[2:0];
             reg_write_en    = 1'b1;
             reg_write_data  = alu_result;
 

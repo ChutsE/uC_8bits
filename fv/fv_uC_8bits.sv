@@ -1,34 +1,30 @@
 module fv_uC_8bits (
     input wire clk,
-    input wire rst,
-    input wire [7:0] in_gpio,         // entradas GPIO
-
-    input wire [7:0] mem_addr,       // dirección EEPROM
-    input wire mem_write_en,         // write enable externo (activo en STORE)
-    input wire [7:0] mem_data,        // BUS BIDIRECCIONAL
-    input wire [7:0] out_gpio        // salida GPIO
+    input wire arst_n,
+    input wire [7:0] in_gpio,
+    input wire [7:0] mem_addr,
+    input wire mem_write_en,
+    input wire [7:0] mem_data,
+    input wire [7:0] out_gpio
 );
     `include "includes.vh"
 
+`AST(uC, gpio_stable,
+    1'b1 |-> ##1,
+    !$isunknown(out_gpio))
 
-//    `COV(wallace, sum_activa,
-//        1'b1 |-> ##2,
-//        Sum != 0 || Co != 0)
+`AST(uC, mem_data_never_x,
+    mem_write_en == 0 |-> ##1,
+    !$isunknown(mem_data))
 
-//    `AST(wallace, result_sum,
-//        1'b1 |-> ,//##LATENCY,
-//        sim_result == rtl_result);
+`AST(uC, no_write_without_enable,
+    mem_write_en == 0 |-> ##1,
+    $stable(mem_data))
 
-//    `AST(wallace, sin_overflow,
-//     1'b1 |-> ##2,
-//     Co < (1 << WIDTH))
-
-//    `ASM(wallace, entrada_estable,
-//     1'b1 |-> ##1,
-//     $stable(inputs))
+`AST(uC, add_instr,
+    mem_write_en == 1  |-> ##1)
 
 
 endmodule
 
-
-bind uC_8bits fv_uC_8bits fv_uC_8bits_i(.*);  
+bind uC_8bits fv_uC_8bits fv_uC_8bits_i(.*);

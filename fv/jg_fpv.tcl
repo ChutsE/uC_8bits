@@ -11,5 +11,5 @@ elaborate -bbox_a 65535 -bbox_mul 65535 -top uC_8bits
 
 clock clk
 
-#reset -expression !arst_n
+reset -expression !arst_n
 set_engineJ_max_trace_length 2000

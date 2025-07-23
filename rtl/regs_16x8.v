@@ -1,6 +1,6 @@
 module regs_16x8 (
     input wire clk,
-    input wire rst,
+    input wire arst_n,
 
     // Escritura
     input wire reg_write_en,
@@ -23,8 +23,8 @@ module regs_16x8 (
 
     integer i;
     // === Escritura sincrónica ===
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             for (i = 0; i < 16; i = i + 1)
                 registers[i] <= 8'b0;
         end else if (reg_write_en) begin

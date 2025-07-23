@@ -1,6 +1,6 @@
 module uC_8bits (
     input wire clk,
-    input wire rst,
+    input wire arst_n,
     input wire [7:0] in_gpio,         // entradas GPIO
 
     output wire [7:0] mem_addr,       // dirección EEPROM
@@ -14,7 +14,7 @@ module uC_8bits (
     wire a_greater, a_equal, carry_out;
 
     wire [7:0] alu_a, alu_b;
-    wire [3:0] alu_opcode;
+    wire [2:0] alu_opcode;
 
     wire pc_load;
     wire [7:0] pc_next;
@@ -34,7 +34,7 @@ module uC_8bits (
     // === Program counter ===
     program_counter #(.ADDR_WIDTH(8)) PC (
         .clk(clk),
-        .rst(rst),
+        .arst_n(arst_n),
         .pc_inc(pc_inc),
         .pc_next(pc_next),
         .pc_load(pc_load),
@@ -55,7 +55,7 @@ module uC_8bits (
     // === Control Unit (con máquina de estados fetch-execute) ===
     control_unit CU (
         .clk(clk),
-        .rst(rst),
+        .arst_n(arst_n),
         .mem_read_data(mem_data_in),       // lectura desde memoria externa
         .alu_result(alu_result),
         .a_greater(a_greater),
