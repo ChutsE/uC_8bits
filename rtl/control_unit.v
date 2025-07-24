@@ -1,7 +1,8 @@
 module control_unit (
     input wire clk,
-    input wire arst_n,
-    input wire [7:0] mem_read_data,   // viene desde mem_data_in
+    input wire rst,
+	 input wire [7:0] flash_data,
+    input wire [7:0] sram_read_data,
     input wire [7:0] alu_result,
     input wire a_greater, a_equal, carry_out,
     input wire [7:0] in_gpio,
@@ -9,11 +10,11 @@ module control_unit (
     output reg [2:0] alu_opcode,
     output reg [7:0] alu_a,
     output reg [7:0] alu_b,
-    output reg mem_write_en,
-    output reg [7:0] mem_addr,
-    output reg [7:0] mem_write_data,
+    output reg sram_write_en,
+    output reg [7:0] sram_addr,
+    output reg [7:0] sram_write_data,
     output reg pc_load,
-    output reg [7:0] pc_next,
+    output reg [11:0] pc_next,
     output reg [7:0] out_gpio,
     output reg pc_inc         // señal para decirle al PC que avance (de 1 en 1)
 );
@@ -30,7 +31,7 @@ module control_unit (
 
     regs_16x8 regs_bank (
         .clk(clk),
-        .arst_n(arst_n),
+        .rst(rst),
         .reg_write_en(reg_write_en),
         .reg_write_addr(reg_write_addr),
         .reg_write_data(reg_write_data),
@@ -42,7 +43,6 @@ module control_unit (
 
     // === FETCH MACHINE ===
     reg [7:0] instr_high;
-    reg [7:0] instr_low;
     reg [15:0] instruction;
     reg [1:0] fetch_state;
 
@@ -55,11 +55,10 @@ module control_unit (
     reg greater_flag;
     reg equal_flag;
 
-    always @(posedge clk or negedge arst_n) begin
-        if (!arst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             fetch_state   <= FETCH_HIGH;
             instr_high    <= 8'b0;
-            instr_low     <= 8'b0;
             instruction   <= 16'b0;
             carry_flag    <= 1'b0;
             greater_flag  <= 1'b0;
@@ -70,14 +69,13 @@ module control_unit (
 
             case (fetch_state)
                 FETCH_HIGH: begin
-                    instr_high <= mem_read_data;
+                    instr_high <= flash_data;
                     fetch_state <= FETCH_LOW;
                     pc_inc <= 1'b1;  // avanzar al byte bajo
                 end
 
                 FETCH_LOW: begin
-                    instr_low <= mem_read_data;
-                    instruction <= {instr_high, mem_read_data};
+                    instruction <= {instr_high, flash_data};
                     fetch_state <= EXECUTE;
                     pc_inc <= 1'b1;  // avanzar para próxima instrucción
                 end
@@ -111,10 +109,10 @@ module control_unit (
     begin
         // Defaults
         reg_write_en    = 1'b0;
-        mem_write_en    = 1'b0;
+        sram_write_en    = 1'b0;
         pc_load         = 1'b0;
-        mem_addr        = 8'b0;
-        mem_write_data  = 8'b0;
+        sram_addr        = 8'b0;
+        sram_write_data  = 8'b0;
         out_gpio        = 8'b0;
         alu_opcode      = 3'b000;
         alu_a           = 8'b0;
@@ -122,7 +120,7 @@ module control_unit (
         reg_write_addr  = reg_dst;
         reg_write_data  = 8'b0;
 
-        if (opcode <= 4'b0111) begin
+        if (opcode <= 4'b0111) begin // ALU instructions
             reg_read_addr_a = reg_a;
             reg_read_addr_b = reg_b;
             alu_a           = reg_read_data_a;
@@ -134,52 +132,52 @@ module control_unit (
         end else begin
             case (opcode)
                 4'b1000: begin // LOAD
-                    mem_addr        = {reg_a, reg_b};
+                    sram_addr        = instruction[7:0];
                     reg_write_en    = 1'b1;
-                    reg_write_data  = mem_read_data;
+                    reg_write_data  = sram_read_data;
                 end
 
                 4'b1001: begin // STORE
                     reg_read_addr_a = reg_dst;
-                    mem_addr        = {reg_a, reg_b};
-                    mem_write_en    = 1'b1;
-                    mem_write_data  = reg_read_data_a;
+                    sram_addr        = instruction[7:0];
+                    sram_write_en    = 1'b1;
+                    sram_write_data  = reg_read_data_a;
                 end
 
                 4'b1010: begin // JMP
-                    pc_next = instruction[7:0];
+                    pc_next = instruction[11:0];
                     pc_load = 1'b1;
                 end
 
-                4'b1011: begin // IN
+					 4'b1011: begin // BEQ
+                    if (equal_flag) begin
+                        pc_next = instruction[11:0];
+                        pc_load = 1'b1;
+                    end
+                end
+
+                4'b1100: begin // BGT
+                    if (greater_flag) begin
+                        pc_next = instruction[11:0];
+                        pc_load = 1'b1;
+                    end
+                end
+
+                4'b1101: begin // BC
+                    if (carry_flag) begin
+                        pc_next = instruction[11:0];
+                        pc_load = 1'b1;
+                    end
+                end
+
+                4'b1110: begin // IN
                     reg_write_en    = 1'b1;
                     reg_write_data  = in_gpio;
                 end
 
-                4'b1100: begin // OUT
+                4'b1111: begin // OUT
                     reg_read_addr_a = reg_dst;
                     out_gpio        = reg_read_data_a;
-                end
-
-                4'b1101: begin // BEQ
-                    if (equal_flag) begin
-                        pc_next = instruction[7:0];
-                        pc_load = 1'b1;
-                    end
-                end
-
-                4'b1110: begin // BGT
-                    if (greater_flag) begin
-                        pc_next = instruction[7:0];
-                        pc_load = 1'b1;
-                    end
-                end
-
-                4'b1111: begin // BC
-                    if (carry_flag) begin
-                        pc_next = instruction[7:0];
-                        pc_load = 1'b1;
-                    end
                 end
             endcase
         end
