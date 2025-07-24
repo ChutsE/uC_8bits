@@ -1,7 +1,7 @@
 module uC_8bits (
     input wire clk,
     input wire rst,
-	 input wire [7:0] flash_data,
+    input wire [7:0] flash_data,
     input wire [7:0] in_gpio,         // entradas GPIO
 
     output wire [7:0] sram_addr,       // dirección EEPROM
