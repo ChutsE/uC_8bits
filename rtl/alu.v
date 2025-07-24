@@ -66,13 +66,13 @@ module right_shift #(parameter WIDTH = 8)(
 endmodule
 
 
-module alu (
-    input wire [7:0] a, b,
-    input wire [2:0] opcode,
-	  output wire [7:0] result,
+module alu #(parameter WIDTH = 8, parameter OPCODE_WIDTH = 3) (
+    input wire [WIDTH-1:0] a, b,
+    input wire [OPCODE_WIDTH-1:0] opcode,
+	output wire [WIDTH-1:0] result,
   	output wire a_greater_out, a_equal_out, carry_out
 );
-    parameter WIDTH = 8;
+
     wire [WIDTH-1:0] result_add;
     wire [WIDTH-1:0] result_sub;
     wire [WIDTH-1:0] result_and;
