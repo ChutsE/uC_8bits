@@ -1,6 +1,6 @@
 module control_unit (
     input wire clk,
-    input wire rst,
+    input wire arst_n,
 	 input wire [7:0] flash_data,
     input wire [7:0] sram_read_data,
     input wire [7:0] alu_result,
@@ -31,7 +31,7 @@ module control_unit (
 
     regs_16x8 regs_bank (
         .clk(clk),
-        .rst(rst),
+        .arst_n(arst_n),
         .reg_write_en(reg_write_en),
         .reg_write_addr(reg_write_addr),
         .reg_write_data(reg_write_data),
@@ -55,8 +55,8 @@ module control_unit (
     reg greater_flag;
     reg equal_flag;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             fetch_state   <= FETCH_HIGH;
             instr_high    <= 8'b0;
             instruction   <= 16'b0;
