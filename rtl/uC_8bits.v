@@ -1,16 +1,16 @@
 module uC_8bits (
     input wire       clk,
     input wire       arst_n,
-	 input wire [7:0] flash_data,
+    input wire [7:0] flash_data,
     input wire       flash_ready,
     input wire [7:0] in_gpio,
-	 input wire [7:0] sram_data_in,
+    input wire [7:0] sram_data_in,
 
     output wire [7:0]  sram_addr,       
     output wire        sram_write_en,         
     output wire [7:0]  sram_data_out,
-    output wire [7:0]  out_gpio,     
-	 output wire [11:0] pc_out
+    output wire [7:0]  out_gpio,
+    output wire [11:0] pc_out
 );
 
     // === Señales internas ===
