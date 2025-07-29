@@ -1,16 +1,16 @@
 module uC_8bits (
-    input wire clk,
-    input wire arst_n,
-	input wire [7:0] flash_data,
-    input wire flash_ready,
+    input wire       clk,
+    input wire       arst_n,
+	 input wire [7:0] flash_data,
+    input wire       flash_ready,
     input wire [7:0] in_gpio,
-	input wire [7:0] sram_data_in,
+	 input wire [7:0] sram_data_in,
 
-    output wire [7:0] sram_addr,       
-    output wire sram_write_en,         
-    output wire [7:0] sram_data_out,
-    output wire [7:0] out_gpio,     
-	output wire [11:0] pc_out
+    output wire [7:0]  sram_addr,       
+    output wire        sram_write_en,         
+    output wire [7:0]  sram_data_out,
+    output wire [7:0]  out_gpio,     
+	 output wire [11:0] pc_out
 );
 
     // === Señales internas ===
@@ -33,7 +33,7 @@ module uC_8bits (
     wire [7:0] reg_read_data_b;
 
     // === Registers  ===
-    regs_16x8 regs_bank (
+    regs_16x8 REGS (
         .clk(clk),
         .arst_n(arst_n),
         .reg_write_en(reg_write_en),
@@ -68,7 +68,7 @@ module uC_8bits (
     );
 
     // === flags register ===
-    bus_shift #(DELAY=3, WIDTH=3) bus_shift_inst (
+    bus_shift #(.DELAY(3), .WIDTH(3)) FLAGS (
         .clk(clk),
         .arst_n(arst_n),
         .in({a_greater, a_equal, carry_out}),
@@ -81,10 +81,10 @@ module uC_8bits (
         .arst_n(arst_n),
 		.flash_data(flash_data),
         .sram_read_data(sram_data_in),
-        .alu_result(alu_result_reg),
+        .alu_result(alu_result),
         .a_greater(a_greater_reg),
         .a_equal(a_equal_reg),
-        .carry_out(carry_out),
+        .carry_out(carry_out_reg),
         .in_gpio(in_gpio),
         .alu_opcode(alu_opcode),
         .alu_a(alu_a),

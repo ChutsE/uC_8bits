@@ -6,8 +6,8 @@ module control_unit (
     input wire [7:0] alu_result,
     input wire a_greater, a_equal, carry_out,
     input wire [7:0] in_gpio,
-    input wire [7:0] reg_read_data_a;
-    input wire [7:0] reg_read_data_b;
+    input wire [7:0] reg_read_data_a,
+    input wire [7:0] reg_read_data_b,
 
     output reg [2:0] alu_opcode,
     output reg [7:0] alu_a,
@@ -35,19 +35,11 @@ module control_unit (
     parameter FETCH_LOW  = 2'b01;
     parameter EXECUTE    = 2'b10;
 
-    // Flags
-    reg carry_flag;
-    reg greater_flag;
-    reg equal_flag;
-
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
             fetch_state   <= FETCH_HIGH;
             instr_high    <= 8'b0;
             instruction   <= 16'b0;
-            carry_flag    <= 1'b0;
-            greater_flag  <= 1'b0;
-            equal_flag    <= 1'b0;
             pc_inc        <= 1'b0;
         end else begin
             pc_inc <= 1'b0;  // default
@@ -124,21 +116,21 @@ module control_unit (
                 end
 
 				4'b1011: begin // BEQ
-                    if (equal_flag) begin
+                    if (a_equal) begin
                         pc_next = {reg_dst, reg_a, reg_b};
                         pc_load = 1'b1;
                     end
                 end
 
                 4'b1100: begin // BGT
-                    if (greater_flag) begin
+                    if (a_greater) begin
                         pc_next = {reg_dst, reg_a, reg_b};
                         pc_load = 1'b1;
                     end
                 end
 
                 4'b1101: begin // BC
-                    if (carry_flag) begin
+                    if (carry_out) begin
                         pc_next = {reg_dst, reg_a, reg_b};
                         pc_load = 1'b1;
                     end
@@ -157,7 +149,5 @@ module control_unit (
                 end
             endcase
         end
-    end
     endtask
-
 endmodule

@@ -4,17 +4,17 @@ module shift #(parameter DELAY = 4)(
     input in,
     output out
 ); 
-    wire _wire_ [DELAY:0];
+    wire [DELAY:0] wires;
     genvar i;
     generate
-        for (i = 0; i < DELAY; i = i + 1) begin
+        for (i = 0; i < DELAY; i = i + 1) begin : FF
             flipflop ff (.clk(clk),
                          .arst_n(arst_n),
-                         .in(_wire_[i]),
-                         .out(_wire_[i+1]));
+                         .in(wires[i]),
+                         .out(wires[i+1]));
         end
     endgenerate
 
-    assign _wire_[0]  = in;
-    assign out = _wire_[DELAY];
+    assign wires[0]  = in;
+    assign out = wires[DELAY];
 endmodule
