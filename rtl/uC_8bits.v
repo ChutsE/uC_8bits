@@ -10,27 +10,39 @@ module uC_8bits (
     output wire        sram_write_en,         
     output wire [7:0]  sram_data_out,
     output wire [7:0]  out_gpio,
-    output wire [11:0] pc_out
+	 output wire [11:0] flash_addr,
+	 
+	 // === Debug Signals ===
+	 output wire       bootstrapping,
+	 output wire [1:0] cu_state,
+	 output wire       reg_write_en,
+	 
+	 output wire pc_inc,
+	 output wire pc_load,
+	 output wire a_greater_reg, a_equal_reg, carry_out_reg
 );
 
     // === Señales internas ===
     wire [7:0] alu_result;
     wire a_greater, a_equal, carry_out;
-    wire a_greater_reg, a_equal_reg, carry_out_reg;
+    //wire a_greater_reg, a_equal_reg, carry_out_reg;
     wire [7:0] alu_a, alu_b;
     wire [3:0] alu_opcode;
 
-    wire pc_load;
+	 wire [11:0] pc_out;
+    //wire pc_load;
     wire [11:0] pc_next;
-    wire pc_inc;
+    //wire pc_inc;
+	 //wire bootstrapping;
 
-    wire reg_write_en;
+    //wire reg_write_en;
     wire [3:0] reg_write_addr;
     wire [7:0] reg_write_data;
     wire [3:0] reg_read_addr_a;
     wire [3:0] reg_read_addr_b;
     wire [7:0] reg_read_data_a;
     wire [7:0] reg_read_data_b;
+	 //wire [1:0] cu_state;
 
     // === Registers  ===
     regs_16x8 REGS (
@@ -49,11 +61,12 @@ module uC_8bits (
     program_counter #(.ADDR_WIDTH(12)) PC (
         .clk(clk),
         .arst_n(arst_n),
-        .flash_ready(),
+        .flash_ready(flash_ready),
         .pc_inc(pc_inc),
         .pc_next(pc_next),
         .pc_load(pc_load),
-        .pc_out(pc_out)
+        .pc_out(pc_out),
+		  .bootstrapping(bootstrapping)
     );
 
     // === ALU ===
@@ -79,13 +92,14 @@ module uC_8bits (
     control_unit CU (
         .clk(clk),
         .arst_n(arst_n),
-		.flash_data(flash_data),
+		  .flash_data(flash_data),
         .sram_read_data(sram_data_in),
         .alu_result(alu_result),
         .a_greater(a_greater_reg),
         .a_equal(a_equal_reg),
         .carry_out(carry_out_reg),
         .in_gpio(in_gpio),
+		  .bootstrapping(bootstrapping),
         .alu_opcode(alu_opcode),
         .alu_a(alu_a),
         .alu_b(alu_b),
@@ -102,7 +116,10 @@ module uC_8bits (
         .reg_read_addr_a(reg_read_addr_a),
         .reg_read_addr_b(reg_read_addr_b),
         .reg_read_data_a(reg_read_data_a),
-        .reg_read_data_b(reg_read_data_b)
+        .reg_read_data_b(reg_read_data_b),
+		  .state(cu_state)
     );
-
+	 
+	 assign flash_addr = (bootstrapping && (cu_state == 2'b10)) ? (pc_out & 12'h07F) : pc_out;
+	 
 endmodule
