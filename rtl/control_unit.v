@@ -4,7 +4,7 @@ module control_unit (
 	 input wire [7:0] flash_data,
     input wire [7:0] sram_read_data,
     input wire [7:0] alu_result,
-    input wire a_greater, a_equal, carry_out,
+    input wire equal, carry_out,
     input wire [7:0] in_gpio,
     input wire [7:0] reg_read_data_a,
     input wire [7:0] reg_read_data_b,
@@ -70,82 +70,67 @@ module control_unit (
 
     task execute_instruction;
         reg_write_en    = 1'b0;
-        sram_write_en   = 1'b0;
         pc_load         = 1'b0;
+        sram_write_en   = 1'b0;
         sram_addr       = 8'b0;
         sram_write_data = 8'b0;
         out_gpio        = 8'b0;
-        alu_opcode      = 3'b001;
+        alu_opcode      = 3'b000;
         alu_a           = 8'b0;
         alu_b           = 8'b0;
-		  reg_write_addr  = reg_dst;
-        reg_write_data  = 8'b0;
-
-        if (opcode <= 4'b0111) begin // ALU instructions
-				reg_write_en    = 1'b1;
-            reg_read_addr_a = reg_a;
-            reg_read_addr_b = reg_b;
-            alu_a           = reg_read_data_a;
-            alu_b           = reg_read_data_b;
-            alu_opcode      = opcode[2:0];
-				reg_write_addr  = reg_dst;
-            reg_write_data  = alu_result;
-
-        end else begin
-            case (opcode)
-                4'b1000: begin // LOAD
-                    sram_addr       = {reg_a, reg_b};
-                    reg_write_en    = 1'b1;
-                    reg_write_data  = sram_read_data;
-                end
-
-                4'b1001: begin // STORE
-                    reg_read_addr_a = reg_dst;
-                    sram_addr        = {reg_a, reg_b};
-                    sram_write_en    = 1'b1;
-                    sram_write_data  = reg_read_data_a;
-                end
-
-                4'b1010: begin // JMP
-                    pc_next = {reg_dst, reg_a, reg_b};
-                    pc_load = 1'b1;
-                end
-
-					 4'b1011: begin // BEQ  B
-                    if (a_equal) begin
-                        pc_next = {reg_dst, reg_a, reg_b};
-                        pc_load = 1'b1;
-                    end
-                end
-
-                4'b1100: begin // BGT   C
-                    if (a_greater) begin 
-                        pc_next = {reg_dst, reg_a, reg_b};
-                        pc_load = 1'b1;
-                    end
-                end
-
-                4'b1101: begin // BC   D
-                    if (carry_out) begin
-                        pc_next = {reg_dst, reg_a, reg_b};
-                        pc_load = 1'b1;
-                    end
-                end
-
-                4'b1110: begin // IN
-                    reg_write_en    = 1'b1;
-                    reg_write_addr  = reg_dst;
-						  
-						  if (bootstrapping) reg_write_data  = flash_data;
-						  else               reg_write_data  = in_gpio;
-                end
-
-                4'b1111: begin // OUT
-                    reg_read_addr_a = reg_dst;
-                    out_gpio        = reg_read_data_a;
-                end
-            endcase
-        end
+		  
+			case (opcode)
+				 4'b0000: begin // NOP
+				 end
+				 4'b0001: begin // LOAD
+					  sram_addr       = {reg_a, reg_b};
+					  reg_write_en    = 1'b1;
+					  reg_write_addr  = reg_dst;
+					  reg_write_data  = sram_read_data;
+				 end
+				 4'b0010: begin // STORE
+					  reg_read_addr_a = reg_dst;
+					  sram_write_en    = 1'b1;
+					  sram_addr        = {reg_a, reg_b};
+					  sram_write_data  = reg_read_data_a;
+				 end
+				 4'b0011: begin // JMP
+					  pc_next = {reg_dst, reg_a, reg_b};
+					  pc_load = 1'b1;
+				 end
+				 4'b0100: begin // BEQ
+					  if (equal) begin
+							pc_next = {reg_dst, reg_a, reg_b};
+							pc_load = 1'b1;
+					  end
+				 end
+				 4'b0101: begin // BC
+					  if (carry_out) begin
+							pc_next = {reg_dst, reg_a, reg_b};
+							pc_load = 1'b1;
+					  end
+				 end
+				 4'b0110: begin // IN
+					  reg_write_en    = 1'b1;
+					  reg_write_addr  = reg_dst;
+					  if (bootstrapping) reg_write_data  = flash_data;
+					  else               reg_write_data  = in_gpio;
+				 end
+				 4'b0111: begin // OUT
+					  reg_read_addr_a = reg_dst;
+					  out_gpio        = reg_read_data_a;
+				 end
+				 default: begin // ALU instructions opcode >= 4'b1000
+						reg_read_addr_a = reg_a;
+						reg_read_addr_b = reg_b;
+						alu_a           = reg_read_data_a;
+						alu_b           = reg_read_data_b;
+						alu_opcode      = opcode[2:0];
+						reg_write_en    = 1'b1;
+						reg_write_addr  = reg_dst;
+						reg_write_data  = alu_result;
+				 end
+			endcase
     endtask
 endmodule
 

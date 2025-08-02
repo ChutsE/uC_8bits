@@ -33,20 +33,19 @@ module bitwise_or #(parameter WIDTH = 8) (
   assign b_or = a | b;
 endmodule
 
-module bitwise_xor #(parameter WIDTH = 8) (
-  input wire [WIDTH-1:0] a, b,
-  output wire [WIDTH-1:0] b_xor
+module bitwise_not #(parameter WIDTH = 8) (
+  input wire [WIDTH-1:0] a,
+  output wire [WIDTH-1:0] a_not
 );
 
-  assign b_xor = a ^ b;
+  assign a_not = ~a;
 endmodule
 
 module comparator #(parameter WIDTH = 8) (
   input wire [WIDTH-1:0] a, b,
-  output wire a_greater, a_equal
+  output wire equal
 );
-  assign a_greater = (a > b);
-  assign a_equal = (a == b);
+  assign equal = (a == b);
 endmodule
 
 module left_shift #(parameter WIDTH = 8) (
@@ -70,17 +69,17 @@ module alu #(parameter WIDTH = 8, parameter OPCODE_WIDTH = 3) (
     input wire [WIDTH-1:0] a, b,
     input wire [OPCODE_WIDTH-1:0] opcode,
 	output wire [WIDTH-1:0] result,
-  	output wire a_greater_out, a_equal_out, carry_out
+  	output wire equal_out, carry_out
 );
 
     wire [WIDTH-1:0] result_add;
     wire [WIDTH-1:0] result_sub;
     wire [WIDTH-1:0] result_and;
     wire [WIDTH-1:0] result_or;
-    wire [WIDTH-1:0] result_xor;
+    wire [WIDTH-1:0] result_not;
     wire [WIDTH-1:0] result_l_shift;
     wire [WIDTH-1:0] result_r_shift;
-  	 wire a_greater, a_equal, carry;
+  	 wire equal, carry;
  
   	adder #(WIDTH) u_adder (
       a, b, result_add, carry
@@ -98,15 +97,14 @@ module alu #(parameter WIDTH = 8, parameter OPCODE_WIDTH = 3) (
       a, b, result_or
     );
   
-    bitwise_xor #(WIDTH) u_bitwise_xor(
-      a, b, result_xor
+    bitwise_not #(WIDTH) u_bitwise_not (
+      a, result_not
     );
   
   comparator #(WIDTH) u_comparator (
       .a(a),
       .b(b),
-      .a_greater(a_greater),
-      .a_equal(a_equal)
+      .equal(equal)
   	);
   
     left_shift #(WIDTH) u_left_shift (
@@ -121,15 +119,14 @@ module alu #(parameter WIDTH = 8, parameter OPCODE_WIDTH = 3) (
       .right_shift(result_r_shift)
     );
 
-  assign  a_greater_out = (opcode == 3'b101) & a_greater ? 1'b1 : 1'b0;
-  assign  a_equal_out = (opcode == 3'b101) & a_equal ? 1'b1 : 1'b0;
+  assign  equal_out = (opcode == 3'b101) & equal ? 1'b1 : 1'b0;
   assign  carry_out = (opcode == 3'b000) & carry ? 1'b1 : 1'b0;
   
   assign result = (opcode == 3'b000) ? result_add :
                   (opcode == 3'b001) ? result_sub :
                   (opcode == 3'b010) ? result_and :
                   (opcode == 3'b011) ? result_or :
-                  (opcode == 3'b100) ? result_xor :
+                  (opcode == 3'b100) ? result_not :
 						(opcode == 3'b110) ? result_l_shift :
 						(opcode == 3'b111) ? result_r_shift :
 						{WIDTH{1'b0}};

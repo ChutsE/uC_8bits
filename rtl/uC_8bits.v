@@ -19,14 +19,14 @@ module uC_8bits (
 	 
 	 output wire pc_inc,
 	 output wire pc_load,
-	 output wire a_greater_reg, a_equal_reg, carry_out_reg,
+	 output wire equal_reg, carry_out_reg,
 	 
 	 output wire [15:0] instruction
 );
 
     // === Señales internas ===
     wire [7:0] alu_result;
-    wire a_greater, a_equal, carry_out;
+    wire equal, carry_out;
     //wire a_greater_reg, a_equal_reg, carry_out_reg;
     wire [7:0] alu_a, alu_b;
     wire [3:0] alu_opcode;
@@ -77,17 +77,16 @@ module uC_8bits (
         .b(alu_b),
         .opcode(alu_opcode),
         .result(alu_result),
-        .a_greater_out(a_greater),
-        .a_equal_out(a_equal),
+        .equal_out(equal),
         .carry_out(carry_out)
     );
 
     // === flags register ===
-    bus_shift #(.DELAY(1), .WIDTH(3)) FLAGS (
+    bus_shift #(.DELAY(3), .WIDTH(2)) FLAGS (
         .clk(clk),
         .arst_n(arst_n),
-        .in({a_greater, a_equal, carry_out}),
-        .out({a_greater_reg, a_equal_reg, carry_out_reg})
+        .in({equal, carry_out}),
+        .out({equal_reg, carry_out_reg})
     );
 
     // === Control Unit ===
@@ -97,8 +96,7 @@ module uC_8bits (
 		  .flash_data(flash_data),
         .sram_read_data(sram_data_in),
         .alu_result(alu_result),
-        .a_greater(a_greater_reg),
-        .a_equal(a_equal_reg),
+        .equal(equal_reg),
         .carry_out(carry_out_reg),
         .in_gpio(in_gpio),
 		  .bootstrapping(bootstrapping),
