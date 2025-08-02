@@ -1,63 +1,32 @@
 module uC_8bits (
-    input wire       clk,
-    input wire       arst_n,
-    input wire [7:0] flash_data,
-    input wire       flash_ready,
-    input wire [7:0] in_gpio,
-    input wire [7:0] sram_data_in,
+    input wire        clk,
+    input wire        arst_n,
+    input wire [15:0] flash_data,
+    input wire        flash_ready,
+    input wire [7:0]  in_gpio,
+    input wire [7:0]  sram_data_in,
 
     output wire [7:0]  sram_addr,       
     output wire        sram_write_en,         
     output wire [7:0]  sram_data_out,
     output wire [7:0]  out_gpio,
-	 output wire [11:0] flash_addr,
-	 
-	 // === Debug Signals ===
-	 output wire       bootstrapping,
-	 output wire [1:0] cu_state,
-	 output wire       reg_write_en,
-	 
-	 output wire pc_inc,
-	 output wire pc_load,
-	 output wire equal_reg, carry_out_reg,
-	 
-	 output wire [15:0] instruction
+    output wire [11:0] pc_out,
+
+    // === Debug Signals ===
+    output wire        bootstrapping,
+    output wire        cu_state,
+    output wire        pc_inc,
+    output wire        pc_load,
+    output wire        equal_reg,
+    output wire        carry_out_reg,
+    output wire [7:0]  alu_result
 );
 
     // === Señales internas ===
-    wire [7:0] alu_result;
-    wire equal, carry_out;
-    //wire a_greater_reg, a_equal_reg, carry_out_reg;
     wire [7:0] alu_a, alu_b;
-    wire [3:0] alu_opcode;
-
-	 wire [11:0] pc_out;
-    //wire pc_load;
+    wire [2:0] alu_opcode;
+    wire       equal, carry_out;
     wire [11:0] pc_next;
-    //wire pc_inc;
-	 //wire bootstrapping;
-
-    //wire reg_write_en;
-    wire [3:0] reg_write_addr;
-    wire [7:0] reg_write_data;
-    wire [3:0] reg_read_addr_a;
-    wire [3:0] reg_read_addr_b;
-    wire [7:0] reg_read_data_a;
-    wire [7:0] reg_read_data_b;
-	 //wire [1:0] cu_state;
-
-    // === Registers  ===
-    regs_16x8 REGS (
-        .clk(clk),
-        .arst_n(arst_n),
-        .reg_write_en(reg_write_en),
-        .reg_write_addr(reg_write_addr),
-        .reg_write_data(reg_write_data),
-        .reg_read_addr_a(reg_read_addr_a),
-        .reg_read_addr_b(reg_read_addr_b),
-        .reg_read_data_a(reg_read_data_a),
-        .reg_read_data_b(reg_read_data_b)
-    );
 
     // === Program counter ===
     program_counter #(.ADDR_WIDTH(12)) PC (
@@ -68,7 +37,7 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_load(pc_load),
         .pc_out(pc_out),
-		  .bootstrapping(bootstrapping)
+        .bootstrapping(bootstrapping)
     );
 
     // === ALU ===
@@ -82,7 +51,7 @@ module uC_8bits (
     );
 
     // === flags register ===
-    bus_shift #(.DELAY(3), .WIDTH(2)) FLAGS (
+    bus_shift #(.DELAY(2), .WIDTH(2)) FLAGS (
         .clk(clk),
         .arst_n(arst_n),
         .in({equal, carry_out}),
@@ -93,13 +62,13 @@ module uC_8bits (
     control_unit CU (
         .clk(clk),
         .arst_n(arst_n),
-		  .flash_data(flash_data),
+        .instruction(flash_data),
         .sram_read_data(sram_data_in),
         .alu_result(alu_result),
         .equal(equal_reg),
         .carry_out(carry_out_reg),
         .in_gpio(in_gpio),
-		  .bootstrapping(bootstrapping),
+        .bootstrapping(bootstrapping),
         .alu_opcode(alu_opcode),
         .alu_a(alu_a),
         .alu_b(alu_b),
@@ -110,17 +79,8 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_inc(pc_inc),                 
         .out_gpio(out_gpio),
-        .reg_write_en(reg_write_en),
-        .reg_write_addr(reg_write_addr),
-        .reg_write_data(reg_write_data),
-        .reg_read_addr_a(reg_read_addr_a),
-        .reg_read_addr_b(reg_read_addr_b),
-        .reg_read_data_a(reg_read_data_a),
-        .reg_read_data_b(reg_read_data_b),
-		  .state(cu_state),
-		  .instruction(instruction)
+        .state(cu_state)
     );
-	 
-	 assign flash_addr = (bootstrapping && (cu_state == 2'b10)) ? (pc_out & 12'h07F) : pc_out;
-	 
+
+
 endmodule

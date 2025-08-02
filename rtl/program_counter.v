@@ -12,11 +12,11 @@ module program_counter #(
 	 
 );
 	
-	 assign bootstrapping = (pc_out < 12'h100) ? 1'b1:1'b0; // 0-0x7F Straps, 0x80-0x27F Strapping Instruccions, 0x280 - 0x1FFF rest of instruccions
+	 assign bootstrapping = (pc_out < 12'h200); //  0x0-0x1FF Strapping Instruccions, 0x200 - 0x1FFF rest of instruccions
 
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n)
-            pc_out <= 12'h080; //program init
+            pc_out <= 12'h000; //program init
         else if (pc_load && flash_ready)
             pc_out <= pc_next;
         else if (pc_inc && flash_ready)

@@ -1,14 +1,12 @@
 module control_unit (
     input wire clk,
     input wire arst_n,
-	 input wire [7:0] flash_data,
+    input wire [15:0] instruction,
     input wire [7:0] sram_read_data,
     input wire [7:0] alu_result,
     input wire equal, carry_out,
     input wire [7:0] in_gpio,
-    input wire [7:0] reg_read_data_a,
-    input wire [7:0] reg_read_data_b,
-	 input wire bootstrapping,
+    input wire bootstrapping,
 
     output reg [2:0] alu_opcode,
     output reg [7:0] alu_a,
@@ -20,117 +18,103 @@ module control_unit (
     output reg [11:0] pc_next,
     output reg [7:0] out_gpio,
     output wire pc_inc,
-    output reg reg_write_en,
-    output reg [3:0] reg_write_addr,
-    output reg [7:0] reg_write_data,
-    output reg [3:0] reg_read_addr_a,
-    output reg [3:0] reg_read_addr_b,
-	 output reg [1:0] state,
-	 output reg [15:0] instruction
+    output reg [1:0] state
 );
 
-    // === FETCH MACHINE ===
-    reg [7:0] instr_high;
-    //reg [15:0] instruction;
+    // === Estados ===
+    parameter FETCH   = 1'b0;
+    parameter EXECUTE = 1'b1;
 
-    parameter FETCH_HIGH = 2'b00;
-    parameter FETCH_LOW  = 2'b01;
-    parameter EXECUTE    = 2'b10;	 
-	 	 
-	 assign pc_inc = (state == FETCH_HIGH || state == FETCH_LOW);
-	 
+    assign pc_inc = (state == FETCH);
+
+    // === Campos de instrucción ===
+    reg [3:0] opcode, reg_dst, reg_a, reg_b;
+
+    // === Banco de registros interno ===
+    reg [7:0] registers [0:15];
+    integer i;
+
+
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
-            state   <= FETCH_HIGH;
-            instr_high    <= 8'b0;
-            instruction   <= 16'b0;
+            state <= FETCH;
+            out_gpio <= 8'b0;
+            pc_load <= 1'b0;
+            sram_write_en <= 1'b0;
+            sram_write_data <= 8'b0;
+
+            for (i = 0; i < 16; i = i + 1)
+                registers[i] <= 8'h00;
+
         end else begin
             case (state)
-                FETCH_HIGH: begin
-                    instr_high <= flash_data;
-                    state <= FETCH_LOW;
+                FETCH: begin
+						 opcode  <= instruction[15:12];
+						 reg_dst <= instruction[11:8];
+						 reg_a   <= instruction[7:4];
+						 reg_b   <= instruction[3:0];
+						 alu_a      = registers[instruction[7:4]];
+						 alu_b      = registers[instruction[3:0]];
+						 alu_opcode = instruction[14:12];
+                   state   <= EXECUTE;
                 end
-                FETCH_LOW: begin
-                    instruction <= {instr_high, flash_data};
-                    state <= EXECUTE;
-                end
+
                 EXECUTE: begin
-                    execute_instruction();
-                    state <= FETCH_HIGH;
+                    // Defaults
+                    pc_load         = 1'b0;
+                    sram_write_en   = 1'b0;
+                    sram_write_data = 8'b0;
+                    sram_addr       = {reg_a, reg_b};
+                    out_gpio        = 8'b0;
+
+                    case (opcode)
+                        4'b0000: ; // NOP
+
+                        4'b0001: begin // LOAD
+                            registers[reg_dst] = sram_read_data;
+                        end
+
+                        4'b0010: begin // STORE
+                            sram_write_en   = 1'b1;
+                            sram_write_data = registers[reg_dst];
+                        end
+
+                        4'b0011: begin // JMP
+                            pc_next = {reg_dst, reg_a, reg_b};
+                            pc_load = 1'b1;
+                        end
+
+                        4'b0100: begin // BEQ
+                            if (equal) begin
+                                pc_next = {reg_dst, reg_a, reg_b};
+                                pc_load = 1'b1;
+                            end
+                        end
+
+                        4'b0101: begin // BC
+                            if (carry_out) begin
+                                pc_next = {reg_dst, reg_a, reg_b};
+                                pc_load = 1'b1;
+                            end
+                        end
+
+                        4'b0110: begin // IN
+                            registers[reg_dst] = bootstrapping ? {reg_a, reg_b} : in_gpio;
+                        end
+
+                        4'b0111: begin // OUT
+                            out_gpio = registers[reg_dst];
+                        end
+
+                        default: begin // ALU
+                            registers[reg_dst] = alu_result;
+                        end
+                    endcase
+
+                    state <= FETCH;
                 end
             endcase
         end
     end
 
-    wire [3:0] opcode, reg_dst, reg_a, reg_b;
-    assign opcode  = instruction[15:12];
-    assign reg_dst = instruction[11:8];
-    assign reg_a   = instruction[7:4];
-    assign reg_b   = instruction[3:0];
-
-    task execute_instruction;
-        reg_write_en    = 1'b0;
-        pc_load         = 1'b0;
-        sram_write_en   = 1'b0;
-        sram_addr       = 8'b0;
-        sram_write_data = 8'b0;
-        out_gpio        = 8'b0;
-        alu_opcode      = 3'b000;
-        alu_a           = 8'b0;
-        alu_b           = 8'b0;
-		  
-			case (opcode)
-				 4'b0000: begin // NOP
-				 end
-				 4'b0001: begin // LOAD
-					  sram_addr       = {reg_a, reg_b};
-					  reg_write_en    = 1'b1;
-					  reg_write_addr  = reg_dst;
-					  reg_write_data  = sram_read_data;
-				 end
-				 4'b0010: begin // STORE
-					  reg_read_addr_a = reg_dst;
-					  sram_write_en    = 1'b1;
-					  sram_addr        = {reg_a, reg_b};
-					  sram_write_data  = reg_read_data_a;
-				 end
-				 4'b0011: begin // JMP
-					  pc_next = {reg_dst, reg_a, reg_b};
-					  pc_load = 1'b1;
-				 end
-				 4'b0100: begin // BEQ
-					  if (equal) begin
-							pc_next = {reg_dst, reg_a, reg_b};
-							pc_load = 1'b1;
-					  end
-				 end
-				 4'b0101: begin // BC
-					  if (carry_out) begin
-							pc_next = {reg_dst, reg_a, reg_b};
-							pc_load = 1'b1;
-					  end
-				 end
-				 4'b0110: begin // IN
-					  reg_write_en    = 1'b1;
-					  reg_write_addr  = reg_dst;
-					  if (bootstrapping) reg_write_data  = flash_data;
-					  else               reg_write_data  = in_gpio;
-				 end
-				 4'b0111: begin // OUT
-					  reg_read_addr_a = reg_dst;
-					  out_gpio        = reg_read_data_a;
-				 end
-				 default: begin // ALU instructions opcode >= 4'b1000
-						reg_read_addr_a = reg_a;
-						reg_read_addr_b = reg_b;
-						alu_a           = reg_read_data_a;
-						alu_b           = reg_read_data_b;
-						alu_opcode      = opcode[2:0];
-						reg_write_en    = 1'b1;
-						reg_write_addr  = reg_dst;
-						reg_write_data  = alu_result;
-				 end
-			endcase
-    endtask
 endmodule
-
