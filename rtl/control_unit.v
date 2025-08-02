@@ -25,18 +25,19 @@ module control_unit (
     output reg [7:0] reg_write_data,
     output reg [3:0] reg_read_addr_a,
     output reg [3:0] reg_read_addr_b,
-	 output reg [1:0] state
+	 output reg [1:0] state,
+	 output reg [15:0] instruction
 );
 
     // === FETCH MACHINE ===
     reg [7:0] instr_high;
-    reg [15:0] instruction;
+    //reg [15:0] instruction;
 
     parameter FETCH_HIGH = 2'b00;
     parameter FETCH_LOW  = 2'b01;
     parameter EXECUTE    = 2'b10;	 
 	 	 
-	 assign pc_inc = (state == 2'b10) ? 1'b0 : 1'b1;
+	 assign pc_inc = (state == FETCH_HIGH || state == FETCH_LOW);
 	 
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
@@ -81,13 +82,13 @@ module control_unit (
         reg_write_data  = 8'b0;
 
         if (opcode <= 4'b0111) begin // ALU instructions
+				reg_write_en    = 1'b1;
             reg_read_addr_a = reg_a;
             reg_read_addr_b = reg_b;
             alu_a           = reg_read_data_a;
             alu_b           = reg_read_data_b;
             alu_opcode      = opcode[2:0];
 				reg_write_addr  = reg_dst;
-            reg_write_en    = 1'b1;
             reg_write_data  = alu_result;
 
         end else begin
@@ -106,38 +107,37 @@ module control_unit (
                 end
 
                 4'b1010: begin // JMP
-                    pc_next <= {reg_dst, reg_a, reg_b};
-                    pc_load <= 1'b1;
+                    pc_next = {reg_dst, reg_a, reg_b};
+                    pc_load = 1'b1;
                 end
 
-					 4'b1011: begin // BEQ
+					 4'b1011: begin // BEQ  B
                     if (a_equal) begin
-                        pc_next <= {reg_dst, reg_a, reg_b};
-                        pc_load <= 1'b1;
+                        pc_next = {reg_dst, reg_a, reg_b};
+                        pc_load = 1'b1;
                     end
                 end
 
-                4'b1100: begin // BGT
-                    if (a_greater) begin
-                        pc_next <= {reg_dst, reg_a, reg_b};
-                        pc_load <= 1'b1;
+                4'b1100: begin // BGT   C
+                    if (a_greater) begin 
+                        pc_next = {reg_dst, reg_a, reg_b};
+                        pc_load = 1'b1;
                     end
                 end
 
-                4'b1101: begin // BC
+                4'b1101: begin // BC   D
                     if (carry_out) begin
-                        pc_next <= {reg_dst, reg_a, reg_b};
-                        pc_load <= 1'b1;
+                        pc_next = {reg_dst, reg_a, reg_b};
+                        pc_load = 1'b1;
                     end
                 end
 
                 4'b1110: begin // IN
                     reg_write_en    = 1'b1;
                     reg_write_addr  = reg_dst;
-						  if (bootstrapping) begin
-								reg_write_data  = flash_data;
-						  end else
-								reg_write_data  = in_gpio;
+						  
+						  if (bootstrapping) reg_write_data  = flash_data;
+						  else               reg_write_data  = in_gpio;
                 end
 
                 4'b1111: begin // OUT

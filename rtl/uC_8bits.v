@@ -19,7 +19,9 @@ module uC_8bits (
 	 
 	 output wire pc_inc,
 	 output wire pc_load,
-	 output wire a_greater_reg, a_equal_reg, carry_out_reg
+	 output wire a_greater_reg, a_equal_reg, carry_out_reg,
+	 
+	 output wire [15:0] instruction
 );
 
     // === Señales internas ===
@@ -81,7 +83,7 @@ module uC_8bits (
     );
 
     // === flags register ===
-    bus_shift #(.DELAY(3), .WIDTH(3)) FLAGS (
+    bus_shift #(.DELAY(1), .WIDTH(3)) FLAGS (
         .clk(clk),
         .arst_n(arst_n),
         .in({a_greater, a_equal, carry_out}),
@@ -117,7 +119,8 @@ module uC_8bits (
         .reg_read_addr_b(reg_read_addr_b),
         .reg_read_data_a(reg_read_data_a),
         .reg_read_data_b(reg_read_data_b),
-		  .state(cu_state)
+		  .state(cu_state),
+		  .instruction(instruction)
     );
 	 
 	 assign flash_addr = (bootstrapping && (cu_state == 2'b10)) ? (pc_out & 12'h07F) : pc_out;
