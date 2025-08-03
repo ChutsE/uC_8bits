@@ -1,13 +1,13 @@
 module uC_8bits (
     input wire        clk,
     input wire        arst_n,
-    input wire [15:0] flash_data,
     input wire        flash_ready,
-    input wire [7:0]  in_gpio,
+    input wire [7:0]  in,
     input wire [7:0]  sram_data_in,
-
-    output wire [7:0]  sram_addr,       
-    output wire        sram_write_en,         
+    input wire [15:0] flash_data,
+      
+    output wire        sram_write_en, 
+    output wire [7:0]  sram_addr, 	 
     output wire [7:0]  sram_data_out,
     output wire [7:0]  out0, out1,
     output wire [11:0] pc_out,
@@ -15,11 +15,8 @@ module uC_8bits (
     // === Debug Signals ===
     output wire        bootstrapping,
     output wire        cu_state,
-    output wire        pc_inc,
-    output wire        pc_load,
-    output wire        equal_reg,
-    output wire        carry_out_reg,
-    output wire [7:0]  alu_result
+    output wire        equal_flag, carry_flag,
+	 output wire        out_select
 );
 
     // === Señales internas ===
@@ -27,13 +24,15 @@ module uC_8bits (
     wire [2:0]  alu_opcode;
     wire        equal, carry_out;
     wire [11:0] pc_next;
-	 wire        out_port;
 	 wire [7:0]  out_gpio;
+	 wire [7:0]  alu_result;
+    wire        pc_inc;
+    wire        pc_load;
 
 	 // === Output demux ===
 	 gpio_demux DEMUX (
         .gpio_out(out_gpio),   
-        .sel(out_port),        
+        .sel(out_select),        
         .port_a(out0),    
         .port_b(out1)    
 	 );
@@ -65,7 +64,7 @@ module uC_8bits (
         .clk(clk),
         .arst_n(arst_n),
         .in({equal, carry_out}),
-        .out({equal_reg, carry_out_reg})
+        .out({equal_flag, carry_flag})
     );
 
     // === Control Unit ===
@@ -75,9 +74,9 @@ module uC_8bits (
         .instruction(flash_data),
         .sram_read_data(sram_data_in),
         .alu_result(alu_result),
-        .equal(equal_reg),
-        .carry_out(carry_out_reg),
-        .in_gpio(in_gpio),
+        .equal(equal_flag),
+        .carry_out(carry_flag),
+        .in_gpio(in),
         .bootstrapping(bootstrapping),
         .alu_opcode(alu_opcode),
         .alu_a(alu_a),
@@ -89,7 +88,7 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_inc(pc_inc),                 
         .out_gpio(out_gpio),
-		  .out_port(out_port),
+		  .out_port(out_select),
         .state(cu_state)
     );
 
