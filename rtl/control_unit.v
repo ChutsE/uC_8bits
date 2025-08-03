@@ -18,7 +18,8 @@ module control_unit (
     output reg [11:0] pc_next,
     output reg [7:0] out_gpio,
     output wire pc_inc,
-    output reg [1:0] state
+    output reg [1:0] state,
+	 output reg out_port
 );
 
     // === Estados ===
@@ -65,7 +66,7 @@ module control_unit (
                     sram_write_en   = 1'b0;
                     sram_write_data = 8'b0;
                     sram_addr       = {reg_a, reg_b};
-                    out_gpio        = 8'b0;
+                    //out_gpio        = 8'b0;
 
                     case (opcode)
                         4'b0000: ; // NOP
@@ -104,6 +105,7 @@ module control_unit (
 
                         4'b0111: begin // OUT
                             out_gpio = registers[reg_dst];
+									 out_port = reg_b[0];
                         end
 
                         default: begin // ALU

@@ -9,7 +9,7 @@ module uC_8bits (
     output wire [7:0]  sram_addr,       
     output wire        sram_write_en,         
     output wire [7:0]  sram_data_out,
-    output wire [7:0]  out_gpio,
+    output wire [7:0]  out0, out1,
     output wire [11:0] pc_out,
 
     // === Debug Signals ===
@@ -23,11 +23,21 @@ module uC_8bits (
 );
 
     // === Señales internas ===
-    wire [7:0] alu_a, alu_b;
-    wire [2:0] alu_opcode;
-    wire       equal, carry_out;
+    wire [7:0]  alu_a, alu_b;
+    wire [2:0]  alu_opcode;
+    wire        equal, carry_out;
     wire [11:0] pc_next;
+	 wire        out_port;
+	 wire [7:0]  out_gpio;
 
+	 // === Output demux ===
+	 gpio_demux DEMUX (
+        .gpio_out(out_gpio),   
+        .sel(out_port),        
+        .port_a(out0),    
+        .port_b(out1)    
+	 );
+	 
     // === Program counter ===
     program_counter #(.ADDR_WIDTH(12)) PC (
         .clk(clk),
@@ -79,6 +89,7 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_inc(pc_inc),                 
         .out_gpio(out_gpio),
+		  .out_port(out_port),
         .state(cu_state)
     );
 
