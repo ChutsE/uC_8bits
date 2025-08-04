@@ -17,16 +17,16 @@ module program_counter #(
 
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
-            pc_out = 12'h000; //program init
-				pc_valid = 1'b1;
+            pc_out <= 12'h000; //program init
+				pc_valid <= 1'b1;
         end else if (pc_load && flash_ready) begin
-            pc_out = pc_next;
-				pc_valid = 1'b1;
+            pc_out <= pc_next;
+				pc_valid <= 1'b1;
         end else if (pc_inc && flash_ready) begin
-            pc_out = pc_out + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
-				pc_valid = 1'b1;
+            pc_out <= pc_out + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
+				pc_valid <= 1'b1;
 		  end else
-				pc_valid = 1'b0;
+				pc_valid <= 1'b0;
     end
 
 endmodule
