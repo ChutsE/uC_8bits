@@ -16,7 +16,8 @@ module uC_8bits (
     output wire        bootstrapping,
     output wire        cu_state,
     output wire        equal_flag, carry_flag,
-	 output wire        out_select
+	 output wire        out_select,
+    output wire        pc_valid
 );
 
     // === Señales internas ===
@@ -26,8 +27,9 @@ module uC_8bits (
     wire [11:0] pc_next;
 	 wire [7:0]  out_gpio;
 	 wire [7:0]  alu_result;
-    wire        pc_inc;
-    wire        pc_load;
+	 wire        pc_load;
+	 wire        pc_inc;
+	 
 
 	 // === Output demux ===
 	 gpio_demux DEMUX (
@@ -46,6 +48,7 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_load(pc_load),
         .pc_out(pc_out),
+		  .pc_valid(pc_valid),
         .bootstrapping(bootstrapping)
     );
 

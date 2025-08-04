@@ -28,11 +28,12 @@ module ip_tile_uC #(
 	 wire flash_ready;
 	 
 	 wire bootstrapping;
-	 wire [1:0] cu_state;
+	 wire cu_state;
 	 wire [7:0] out0, out1;
     wire equal_flag;
     wire carry_flag;
 	 wire out_select;
+	 wire pc_valid;
 	 
 	 assign sram_data_in = data_reg_a[7:0];
 	 assign flash_data = data_reg_b[15:0];
@@ -59,7 +60,8 @@ module ip_tile_uC #(
 		  .cu_state(cu_state),
 		  .equal_flag(equal_flag),
 		  .carry_flag(carry_flag),
-		  .out_select(out_select)
+		  .out_select(out_select),
+		  .pc_valid(pc_valid)
     );
 
 	 assign out_gpio = {
@@ -68,22 +70,23 @@ module ip_tile_uC #(
 	 };
 	 
     assign data_reg_c = {
-        3'b0,             // bits 31:29 → ceros
-		  pc_out,			  // bits 28:17 → FLASH address
-		  sram_write_en,    // bit  16    → SRAM write enable
+        4'b0,             // bits 31:28 → RSV
+		  pc_out,			  // bits 27:16 → FLASH address
         sram_data_out,    // bits 15:8  → SRAM data out
         sram_addr         // bits 7:0   → SRAM address
     };
 
     assign csr_out = {
-		  7'b0,            // bits 15:9 → ceros
-	     bootstrapping,   // bit    8  → boot mode bit (1:Boot, 2:Runtime)
-	     cu_state,        // bits   7  → CU Current state (0:FETCH, 1:EXECUTION)
+		  8'b0,            // bits 15:8 → RSV
+	     bootstrapping,   // bit    7  → boot mode bit (1:Boot, 2:Runtime)
 		  equal_flag,		 // bit    6  → Equal flag
 	     carry_flag,	    // bit    5  → Carry out flag
-		  out_select,      // bit    4  → SRAM write enable
-		  4'b0             // bits 3:0  → ceros
-	 };
+		  out_select,      // bit    4  → Outport select
+		  1'b0,            // bits   3  → RSV
+		  sram_write_en,   // bit    2  → SRAM write enable
+		  cu_state,        // bits   1  → CU Current state (0:FETCH, 1:EXECUTION)
+		  pc_valid			 // bit    0  → SRAM write enable
+	 }; 
 	 
 	 assign csr_in_re = 1'b1;
 	 assign csr_out_we = 1'b1;
