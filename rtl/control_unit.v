@@ -50,13 +50,15 @@ module control_unit (
         end else begin
             case (state)
                 FETCH: begin
-						 opcode  <= instruction[15:12];
-						 reg_dst <= instruction[11:8];
-						 reg_a   <= instruction[7:4];
-						 reg_b   <= instruction[3:0];
+						 opcode     <= instruction[15:12];
+						 reg_dst    <= instruction[11:8];
+						 reg_a      <= instruction[7:4];
+						 reg_b      <= instruction[3:0];
 						 alu_a      <= registers[instruction[7:4]];
 						 alu_b      <= registers[instruction[3:0]];
 						 alu_opcode <= instruction[14:12];
+						 sram_addr  <= instruction[3:0];
+						 sram_write_data <= registers[instruction[11:8]];
                    state   <= EXECUTE;
                 end
 
@@ -64,10 +66,7 @@ module control_unit (
                     // Defaults
                     pc_load         <= 1'b0;
                     sram_write_en   <= 1'b0;
-                    sram_write_data <= 8'b0;
-                    sram_addr       <= {reg_a, reg_b};
-                    //out_gpio        <= 8'b0;
-
+                   
                     case (opcode)
                         4'b0000: ; // NOP
 
