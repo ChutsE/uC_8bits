@@ -66,7 +66,7 @@ module control_unit (
                     sram_write_en   <= 1'b0;
                     sram_write_data <= 8'b0;
                     sram_addr       <= {reg_a, reg_b};
-                    //out_gpio        = 8'b0;
+                    //out_gpio        <= 8'b0;
 
                     case (opcode)
                         4'b0000: ; // NOP
