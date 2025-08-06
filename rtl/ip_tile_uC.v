@@ -84,7 +84,8 @@ module ip_tile_uC #(
 		  equal_flag,		 // bit    6  → Equal flag
 	     carry_flag,	    // bit    5  → Carry out flag
 		  out_select,      // bit    4  → Outport select
-		  4'b0,            // bits   3:0  → RSV
+		  clk,
+		  3'b0,            // bits   3:0  → RSV
 	 }; 
 	 
 	 assign csr_in_re = 1'b1;
