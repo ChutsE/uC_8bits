@@ -33,7 +33,9 @@ module control_unit (
 
     // === Banco de registros interno ===
     reg [7:0] registers [0:15];
+	 reg [7:0] in_gpio_reg;
     integer i;
+	 
 
 
     always @(posedge clk or negedge arst_n) begin
@@ -59,6 +61,7 @@ module control_unit (
 						 alu_opcode <= instruction[14:12];
 						 sram_addr  <= instruction[3:0];
 						 sram_write_data <= registers[instruction[11:8]];
+						 in_gpio_reg <= in_gpio;
                    state   <= EXECUTE;
                 end
 
@@ -99,7 +102,7 @@ module control_unit (
                         end
 
                         4'b0110: begin // IN
-                            registers[reg_dst] <= bootstrapping ? {reg_a, reg_b} : in_gpio;
+                            registers[reg_dst] <= bootstrapping ? {reg_a, reg_b} : in_gpio_reg;
                         end
 
                         4'b0111: begin // OUT

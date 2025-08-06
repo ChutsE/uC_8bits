@@ -34,14 +34,16 @@ module ip_tile_uC #(
     wire carry_flag;
 	 wire out_select;
 	 wire pc_valid;
-	 
+	 wire CLK;
+
 	 assign sram_data_in = data_reg_a[7:0];
 	 assign flash_data = data_reg_b[15:0];
 	 assign flash_ready = csr_in[4];
+	 assign CLK =  csr_in[5]
 
     // === Instancia del microcontrolador ===
     uC_8bits uC_inst (
-        .clk(clk),
+        .clk(CLK),
         .arst_n(arst_n),
         .flash_data(flash_data),
 		  .flash_ready(flash_ready),
