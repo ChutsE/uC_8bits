@@ -45,7 +45,6 @@ class CsrComClass:
         self.ser_wr_rd(v)
         v = struct.pack('I', data)
         self.ser_wr_rd(v)
-        print("wrote " + "{:08X}".format(data) )
         self.serial.reset_input_buffer()
 
     def read_csr(self, addr):
@@ -59,7 +58,6 @@ class CsrComClass:
         while(self.serial.in_waiting < 4):()
         val = self.serial.read(4)
         data_received = int.from_bytes(val, "little")
-        print("Read  " + "{:08X}".format(data_received) )
         return(data_received)
 
     def read_client_name(self):
@@ -75,7 +73,6 @@ class CsrComClass:
             while(self.serial.in_waiting < 4):()
             val = self.serial.read(4)
             string_received = string_received + val[::-1].decode('utf-8')
-        print(string_received)
 
     def read_owner_name(self):
         COMMAND = 0
@@ -90,7 +87,6 @@ class CsrComClass:
             while(self.serial.in_waiting < 4):()
             val = self.serial.read(4)
             string_received = string_received + val[::-1].decode('utf-8')
-        print(string_received)
         return(string_received)
 
     def transfer(self, bt):

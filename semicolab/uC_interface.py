@@ -25,16 +25,6 @@ class UCInterface(CsrComClass):
             print("Program Counter: " + "{:08X}".format(self.program_counter))
             print("CU State: " + "{:08X}".format(self.cu_state))
 
-    def get_gpio_output_0(self, out_gpio):
-        gpio_output_0 = (out_gpio) & 0xFF
-        print("Getting GPIO output: " + "{:08X}".format(gpio_output_0))
-        return gpio_output_0
-    
-    def get_gpio_output_1(self, out_gpio):
-        gpio_output_1 = (out_gpio >> 8) & 0xFF
-        print("Getting GPIO output: " + "{:08X}".format(gpio_output_1))
-        return gpio_output_1
-
     def load_instruction(self, instruction, verbose=True):
         self.data_reg_a = (self.data_reg_a & ~(1 << 8)) | (0x1 << 8)
         self.data_reg_b = instruction & 0xFFFF

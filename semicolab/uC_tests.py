@@ -17,12 +17,11 @@ class UCTests(UCInterface, Programs):
     def run_actions(self):
         self.enable_tile()
         print("===== Testing Full Cycle =====")
-        for i in range(2000):
-
-            self.load_clock(1)
+        for i in range(1000):
+            self.load_clock(1, verbose=False)
             if self.cu_state == self.EXECUTION_STATE:
                 self.load_instruction(self.program[self.program_counter])
             self.flush()
-            self.load_clock(0)
-            self.flush()
+            self.load_clock(0, verbose=False)
+            self.flush(verbose=False)
         print("===== End of Full Cycle Test =====")
