@@ -1,14 +1,10 @@
 module uC_8bits (
     input wire        clk,
+	 input wire        clk_valid,
     input wire        arst_n,
-    input wire        flash_ready,
     input wire [7:0]  in,
-    input wire [7:0]  sram_data_in,
     input wire [15:0] flash_data,
-      
-    output wire        sram_write_en, 
-    output wire [7:0]  sram_addr, 	 
-    output wire [7:0]  sram_data_out,
+
     output wire [7:0]  out0, out1,
     output wire [11:0] pc_out,
 
@@ -16,10 +12,12 @@ module uC_8bits (
     output wire        bootstrapping,
     output wire        cu_state,
     output wire        equal_flag, carry_flag,
-	 output wire        out_select,
-    output wire        pc_valid
+	 output wire        out_select
 );
-
+    wire        sram_write_en;
+    wire [7:0]  sram_addr;
+    wire [7:0]  sram_data_out;
+	 wire [7:0]  sram_data_in;
     // === Señales internas ===
     wire [7:0]  alu_a, alu_b;
     wire [2:0]  alu_opcode;
@@ -42,13 +40,12 @@ module uC_8bits (
     // === Program counter ===
     program_counter #(.ADDR_WIDTH(12)) PC (
         .clk(clk),
+		  .clk_valid(clk_valid),
         .arst_n(arst_n),
-        .flash_ready(flash_ready),
         .pc_inc(pc_inc),
         .pc_next(pc_next),
         .pc_load(pc_load),
         .pc_out(pc_out),
-		  .pc_valid(pc_valid),
         .bootstrapping(bootstrapping)
     );
 
@@ -64,7 +61,7 @@ module uC_8bits (
 
     // === flags register ===
     bus_shift #(.DELAY(2), .WIDTH(2)) FLAGS (
-        .clk(clk),
+        .clk(clk_valid),
         .arst_n(arst_n),
         .in({equal, carry_out}),
         .out({equal_flag, carry_flag})
@@ -73,6 +70,7 @@ module uC_8bits (
     // === Control Unit ===
     control_unit CU (
         .clk(clk),
+		  .clk_valid(clk_valid),
         .arst_n(arst_n),
         .instruction(flash_data),
         .sram_read_data(sram_data_in),
@@ -94,6 +92,16 @@ module uC_8bits (
 		  .out_port(out_select),
         .state(cu_state)
     );
+
+	sram_256x8 SRAM (
+		.clk(clk),
+		.clk_valid(clk_valid),
+		.arst_n(arst_n),
+		.sram_write_en(sram_write_en),
+		.sram_addr(sram_addr),
+		.sram_data_out(sram_data_out),
+		.sram_data_in(sram_data_in)
+	);
 
 
 endmodule

@@ -27,7 +27,7 @@ module tile_wrapper_jesus_esparza#(parameter OWNER_NAME_LENGTH = 20, REG_WIDTH =
   wire [15:0] out_gpio_w;
   wire [7:0]  in_gpio_w;
   
-  assign in_gpio_w = gpios_in[24:16];
+  assign in_gpio_w = gpios_in[23:16];
   assign gpios_out = {
 			19'b0,
 			out_gpio_w
@@ -48,6 +48,7 @@ module tile_wrapper_jesus_esparza#(parameter OWNER_NAME_LENGTH = 20, REG_WIDTH =
 	.gpios_in(gpios_in),
 	.ogpios_in(gpios_in_w)
   );
+
 
   // TODO: here goes the user tile logic instantiation
   ip_tile_uC #(REG_WIDTH, CSR_IN_WIDTH, CSR_OUT_WIDTH) ip_tile_uC_i(

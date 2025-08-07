@@ -18,13 +18,9 @@ module ip_tile_uC #(
 );
 
     // === Señales internas ===
-    wire [7:0] sram_addr;
-    wire [7:0] sram_data_out;
+
     wire [11:0] pc_out;
-	 
 	 wire [15:0] flash_data;
-	 wire [7:0] sram_data_in;
-	 wire sram_write_en;
 	 
 	 wire bootstrapping;
 	 wire cu_state;
@@ -32,25 +28,19 @@ module ip_tile_uC #(
     wire equal_flag;
     wire carry_flag;
 	 wire out_select;
-	 wire pc_valid;
-	 wire CLK;
+	 wire clk_valid;
 
-	 assign sram_data_in = data_reg_a[7:0];
-	 assign flash_data = data_reg_b[15:0];
-	 assign CLK =  data_reg_a[9];
+	 assign flash_data = data_reg_a[15:0];
+	 assign clk_valid =  csr_in[15];
 
     // === Instancia del microcontrolador ===
     uC_8bits uC_inst (
-        .clk(CLK),
+        .clk(clk),
+		  .clk_valid(clk_valid),
         .arst_n(arst_n),
         .flash_data(flash_data),
-		  .flash_ready(1'b1),
         .in(in_gpio),
-        .sram_data_in(sram_data_in),
 
-        .sram_addr(sram_addr),
-        .sram_write_en(sram_write_en),
-        .sram_data_out(sram_data_out),
         .out0(out0),
 		  .out1(out1),
         .pc_out(pc_out),
@@ -60,8 +50,7 @@ module ip_tile_uC #(
 		  .cu_state(cu_state),
 		  .equal_flag(equal_flag),
 		  .carry_flag(carry_flag),
-		  .out_select(out_select),
-		  .pc_valid(pc_valid)
+		  .out_select(out_select)
     );
 
 	 assign out_gpio = {
@@ -70,23 +59,16 @@ module ip_tile_uC #(
 	 };
 	 
     assign data_reg_c = {
-	     bootstrapping,   // bit    31  → boot mode bit (1:Boot, 2:Runtime)
-		  sram_write_en,   // bit    30  → SRAM write enable
-		  cu_state,        // bits   29  → CU Current state (0:FETCH, 1:EXECUTION)
-		  pc_valid,  		 // bit    28  → SRAM write enable
-		  pc_out,			  // bits 27:16 → FLASH address
-        sram_data_out,    // bits 15:8  → SRAM data out
-        sram_addr         // bits 7:0   → SRAM address
+		  15'b0, 
+		  equal_flag,		 // bit    16  → Equal flag
+	     carry_flag,	    // bit    15  → Carry out flag
+		  out_select,      // bit    14  → Outport select
+	     bootstrapping,   // bit    13  → boot mode bit (1:Boot, 2:Runtime)
+		  cu_state,        // bits   12  → CU Current state (0:FETCH, 1:EXECUTION)
+		  pc_out 			 // bits   11:0 → FLASH address
     };
 
-    assign csr_out = {
-		  9'b0,            // bits 15:8 → RSV
-		  equal_flag,		 // bit    6  → Equal flag
-	     carry_flag,	    // bit    5  → Carry out flag
-		  out_select,      // bit    4  → Outport select
-		  clk,
-		  3'b0,            // bits   3:0  → RSV
-	 }; 
+    assign csr_out = {32'b0}; 
 	 
 	 assign csr_in_re = 1'b1;
 	 assign csr_out_we = 1'b1;
