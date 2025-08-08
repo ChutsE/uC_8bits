@@ -13,7 +13,7 @@ module control_unit (
     output reg [7:0] alu_a,
     output reg [7:0] alu_b,
     output reg sram_write_en,
-    output reg [7:0] sram_addr,
+    output reg [5:0] sram_addr,
     output reg [7:0] sram_write_data,
     output reg pc_load,
     output reg [11:0] pc_next,
@@ -57,7 +57,7 @@ module control_unit (
 							 alu_a      <= registers[instruction[7:4]];
 							 alu_b      <= registers[instruction[3:0]];
 							 alu_opcode <= instruction[14:12];
-							 sram_addr  <= instruction[3:0];
+							 sram_addr  <= instruction[5:0];
 							 sram_write_data <= registers[instruction[11:8]];
 							 in_gpio_reg <= in_gpio;
 							 state   <= EXECUTE;

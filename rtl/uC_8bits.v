@@ -15,7 +15,7 @@ module uC_8bits (
 	 output wire        out_select
 );
     wire        sram_write_en;
-    wire [7:0]  sram_addr;
+    wire [5:0]  sram_addr;
     wire [7:0]  sram_data_out;
 	 wire [7:0]  sram_data_in;
     // === Señales internas ===
@@ -93,7 +93,7 @@ module uC_8bits (
         .state(cu_state)
     );
 
-	sram_256x8 SRAM (
+	sram_64x8 SRAM (
 		.clk(clk),
 		.clk_valid(clk_valid),
 		.arst_n(arst_n),
