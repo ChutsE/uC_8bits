@@ -5,7 +5,7 @@ module gpio_demux (
     output reg  [7:0] port_b      
 );
 
-    always @(*) begin
+    always @(sel, gpio_out) begin
         case (sel)
             1'b0: begin
                 port_a = gpio_out;
