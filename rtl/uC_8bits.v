@@ -1,6 +1,6 @@
 module uC_8bits (
     input wire        clk,
-	 input wire        clk_valid,
+	input wire        clk_valid,
     input wire        arst_n,
     input wire [7:0]  in,
     input wire [15:0] flash_data,
@@ -12,21 +12,21 @@ module uC_8bits (
     output wire        bootstrapping,
     output wire        cu_state,
     output wire        equal_flag, carry_flag,
-	 output wire        out_select
+	output wire        out_select
 );
     wire        sram_write_en;
     wire [5:0]  sram_addr;
     wire [7:0]  sram_data_out;
-	 wire [7:0]  sram_data_in;
+	wire [7:0]  sram_data_in;
     // === Señales internas ===
     wire [7:0]  alu_a, alu_b;
     wire [2:0]  alu_opcode;
     wire        equal, carry_out;
     wire [11:0] pc_next;
-	 wire [7:0]  out_gpio;
-	 wire [7:0]  alu_result;
-	 wire        pc_load;
-	 wire        pc_inc;
+	wire [7:0]  out_gpio;
+	wire [7:0]  alu_result;
+	wire        pc_load;
+	wire        pc_inc;
 	 
 
 	 // === Output demux ===
@@ -40,7 +40,7 @@ module uC_8bits (
     // === Program counter ===
     program_counter #(.ADDR_WIDTH(12)) PC (
         .clk(clk),
-		  .clk_valid(clk_valid),
+		.clk_valid(clk_valid),
         .arst_n(arst_n),
         .pc_inc(pc_inc),
         .pc_next(pc_next),
@@ -70,7 +70,7 @@ module uC_8bits (
     // === Control Unit ===
     control_unit CU (
         .clk(clk),
-		  .clk_valid(clk_valid),
+		.clk_valid(clk_valid),
         .arst_n(arst_n),
         .instruction(flash_data),
         .sram_read_data(sram_data_in),
@@ -89,7 +89,7 @@ module uC_8bits (
         .pc_next(pc_next),
         .pc_inc(pc_inc),                 
         .out_gpio(out_gpio),
-		  .out_port(out_select),
+		.out_port(out_select),
         .state(cu_state)
     );
 

@@ -17,9 +17,9 @@ module program_counter #(
         if (!arst_n) begin
             pc_out <= 12'h000;
         end else begin
-				if(clk_valid) begin
-					  if (pc_load)     pc_out <= pc_next;
-					  else if (pc_inc) pc_out <= pc_out + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
+			if(clk_valid) begin
+			   if (pc_load)     pc_out <= pc_next;
+			   else if (pc_inc) pc_out <= pc_out + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
 			end
 		end
     end

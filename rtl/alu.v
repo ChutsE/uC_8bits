@@ -125,9 +125,9 @@ module alu #(parameter WIDTH = 8, parameter OPCODE_WIDTH = 3) (
   assign result = (opcode == 3'b000) ? result_add :
                   (opcode == 3'b001) ? result_sub :
                   (opcode == 3'b010) ? result_and :
-                  (opcode == 3'b011) ? result_or :
+                  (opcode == 3'b011) ? result_or  :
                   (opcode == 3'b100) ? result_not :
-						(opcode == 3'b110) ? result_l_shift :
-						(opcode == 3'b111) ? result_r_shift :
-						{WIDTH{1'b0}};
+                  (opcode == 3'b110) ? result_l_shift :
+                  (opcode == 3'b111) ? result_r_shift :
+                  {WIDTH{1'b0}};
 endmodule

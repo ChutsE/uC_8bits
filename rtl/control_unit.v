@@ -1,6 +1,6 @@
 module control_unit (
     input wire clk,
-	 input wire clk_valid,
+	input wire clk_valid,
     input wire arst_n,
     input wire [15:0] instruction,
     input wire [7:0] sram_read_data,
@@ -20,7 +20,7 @@ module control_unit (
     output reg [7:0] out_gpio,
     output wire pc_inc,
     output reg [1:0] state,
-	 output reg out_port
+	output reg out_port
 );
 
     // === Estados ===
@@ -34,7 +34,7 @@ module control_unit (
 
     // === Banco de registros interno ===
     reg [7:0] registers [0:15];
-	 reg [7:0] in_gpio_reg;
+	reg [7:0] in_gpio_reg;
     integer i;
 	 
     always @(posedge clk or negedge arst_n) begin
@@ -49,75 +49,62 @@ module control_unit (
         end else begin
 				if(clk_valid) begin
 					case (state)
-						 FETCH: begin
-							 opcode     <= instruction[15:12];
-							 reg_dst    <= instruction[11:8];
-							 reg_a      <= instruction[7:4];
-							 reg_b      <= instruction[3:0];
-							 alu_a      <= registers[instruction[7:4]];
-							 alu_b      <= registers[instruction[3:0]];
-							 alu_opcode <= instruction[14:12];
-							 sram_addr  <= instruction[5:0];
-							 sram_write_data <= registers[instruction[11:8]];
-							 in_gpio_reg <= in_gpio;
-							 state   <= EXECUTE;
-						 end
-
-						 EXECUTE: begin
-							  // Defaults
-							  pc_load         <= 1'b0;
-							  sram_write_en   <= 1'b0;
-							 
-							  case (opcode)
-									4'b0000: ; // NOP
-
-									4'b0001: begin // LOAD
-										 registers[reg_dst] <= sram_read_data;
+						FETCH: begin
+							opcode          <= instruction[15:12];
+							reg_dst         <= instruction[11:8];
+							reg_a           <= instruction[7:4];
+							reg_b           <= instruction[3:0];
+							alu_a           <= registers[instruction[7:4]];
+							alu_b           <= registers[instruction[3:0]];
+							alu_opcode      <= instruction[14:12];
+							sram_addr       <= instruction[5:0];
+							sram_write_data <= registers[instruction[11:8]];
+							in_gpio_reg     <= in_gpio;
+							state           <= EXECUTE;
+						end
+						EXECUTE: begin
+							pc_load         <= 1'b0;
+							sram_write_en   <= 1'b0;
+							case (opcode)
+								4'b0000: ; // NOP
+								4'b0001: begin // LOAD
+									registers[reg_dst] <= sram_read_data;
+								end
+								4'b0010: begin // STORE
+									sram_write_en   <= 1'b1;
+									sram_write_data <= registers[reg_dst];
+								end
+								4'b0011: begin // JMP
+									pc_next <= {reg_dst, reg_a, reg_b};
+									pc_load <= 1'b1;
+								end
+								4'b0100: begin // BEQ
+									if (equal) begin
+										pc_next <= {reg_dst, reg_a, reg_b};
+										pc_load <= 1'b1;
 									end
-
-									4'b0010: begin // STORE
-										 sram_write_en   <= 1'b1;
-										 sram_write_data <= registers[reg_dst];
+								end
+								4'b0101: begin // BC
+									if (carry_out) begin
+										pc_next <= {reg_dst, reg_a, reg_b};
+										pc_load <= 1'b1;
 									end
-
-									4'b0011: begin // JMP
-										 pc_next <= {reg_dst, reg_a, reg_b};
-										 pc_load <= 1'b1;
-									end
-
-									4'b0100: begin // BEQ
-										 if (equal) begin
-											  pc_next <= {reg_dst, reg_a, reg_b};
-											  pc_load <= 1'b1;
-										 end
-									end
-
-									4'b0101: begin // BC
-										 if (carry_out) begin
-											  pc_next <= {reg_dst, reg_a, reg_b};
-											  pc_load <= 1'b1;
-										 end
-									end
-
-									4'b0110: begin // IN
-										 registers[reg_dst] <= bootstrapping ? {reg_a, reg_b} : in_gpio_reg;
-									end
-
-									4'b0111: begin // OUT
-										 out_gpio <= registers[reg_dst];
-										 out_port <= reg_b[0];
-									end
-
-									default: begin // ALU
-										 registers[reg_dst] <= alu_result;
-									end
-							  endcase
-
-							  state <= FETCH;
+								end
+								4'b0110: begin // IN
+									registers[reg_dst] <= bootstrapping ? {reg_a, reg_b} : in_gpio_reg;
+								end
+								4'b0111: begin // OUT
+									out_gpio <= registers[reg_dst];
+									out_port <= reg_b[0];
+								end
+								default: begin // ALU
+									registers[reg_dst] <= alu_result;
+								end
+							endcase
+							state <= FETCH;
 						 end
 					endcase
 				end
         end
     end
-
 endmodule
