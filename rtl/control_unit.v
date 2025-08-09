@@ -19,7 +19,7 @@ module control_unit (
     output reg [11:0] pc_next,
     output reg [7:0] out_gpio,
     output wire pc_inc,
-    output reg [1:0] state,
+    output reg state,
 	output reg out_port
 );
 
