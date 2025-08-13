@@ -1,8 +1,8 @@
 clear -all
 
 analyze -sv ../rtl/flipflop.v
-analyze -sv      ../rtl/shift.v
-analyze -sv      ../rtl/bus_shift.v
+analyze -sv ../rtl/shift.v
+analyze -sv ../rtl/bus_shift.v
 analyze -sv ../rtl/alu.v
 analyze -sv ../rtl/control_unit.v
 analyze -sv ../rtl/sram_64x8.v
