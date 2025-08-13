@@ -41,13 +41,13 @@ module fv_uC_8bits (
     endsequence
 
     logic [7:0] add_a_reg, add_b_reg;
-    bus_shift #(.DELAY(5), .WIDTH(8)) a_shifting (
+    bus_shift #(.DELAY(5), .WIDTH(8)) add_a_shifting (
         .clk(clk),
         .arst_n(arst_n),
         .in(add_a),
         .out(add_a_reg)
     );
-    bus_shift #(.DELAY(3), .WIDTH(8)) b_shifting (
+    bus_shift #(.DELAY(3), .WIDTH(8)) add_b_shifting (
         .clk(clk),
         .arst_n(arst_n),
         .in(add_b),
@@ -61,6 +61,38 @@ module fv_uC_8bits (
         $rose(arst_n) |-> add_sequence |=> (alu_opcode==3'b000 && alu_result==add_result[7:0]);
     endproperty
     assert property (p_exec_sum_from_reset);
+
+    logic [8:0] sub_result;
+    logic [7:0] sub_a, sub_b;
+    sequence sub_sequence;
+        
+        (flash_data == {8'h61, sub_a}) ##DELAY
+        (flash_data == {8'h62, sub_b}) ##DELAY
+        (flash_data == 16'h9312);// SUM
+    endsequence
+
+    logic [7:0] sub_a_reg, sub_b_reg;
+    bus_shift #(.DELAY(5), .WIDTH(8)) sub_a_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(sub_a),
+        .out(sub_a_reg)
+    );
+    bus_shift #(.DELAY(3), .WIDTH(8)) sub_b_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(sub_b),
+        .out(sub_b_reg)
+    );
+
+    assign sub_result = sub_a_reg - sub_b_reg;
+
+    property p_exec_sub_from_reset;
+    @(posedge clk) disable iff (!arst_n)
+        $rose(arst_n) |-> sub_sequence |=> (alu_opcode==3'b001 && alu_result==sub_result[7:0]);
+    endproperty
+    assert property (p_exec_sub_from_reset);
+
 
     // WhiteBox: suma y carry
     logic [8:0] sum;
