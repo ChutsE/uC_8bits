@@ -61,7 +61,7 @@ module uC_8bits (
 
     // === flags register ===
     bus_shift #(.DELAY(2), .WIDTH(2)) FLAGS (
-        .clk(clk_valid),
+        .clk(clk&&clk_valid),
         .arst_n(arst_n),
         .in({equal, carry_out}),
         .out({equal_flag, carry_flag})
