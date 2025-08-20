@@ -97,6 +97,29 @@ module fv_uC_8bits (
         $rose(arst_n) |-> sub_sequence |=> (alu_opcode==3'b001 && alu_result==sub_result[7:0]);
     endproperty
 
+    // =============================== NOT assert BlackBox 
+    logic [7:0] not_a, not_result;
+    sequence not_sequence;
+        (flash_data == {8'h61, not_a}) ##DELAY
+        (flash_data == 16'hC210);// SUM
+    endsequence
+
+    logic [7:0] not_a_reg;
+
+    bus_shift #(.DELAY(3), .WIDTH(8)) not_b_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(not_a),
+        .out(not_a_reg)
+    );
+
+    assign not_result = ~not_a_reg;
+
+    property p_exec_not_from_reset;
+    @(posedge clk) disable iff (!arst_n)
+        $rose(arst_n) |-> not_sequence |=> (alu_opcode==3'b100 && alu_result==not_result);
+    endproperty
+
 
     // =============================== JMP assert BlackBox 
     logic [11:0] next_jump, next_jump_reg;
@@ -207,7 +230,7 @@ module fv_uC_8bits (
 
     property p_exec_in_from_reset;
     @(posedge clk) disable iff (!arst_n)
-        $rose(arst_n) |-> in_sequence |=> sram_addr == 1'b1 |-> (in_reg == sram_data_in);
+        $rose(arst_n) |-> in_sequence |=> sram_addr == 1'b1 |-> in_reg == sram_data_out;
     endproperty
 
     // ============================ WhiteBox: suma y carry
@@ -234,6 +257,7 @@ module fv_uC_8bits (
 
 uC_ast_ADD:   assert property (p_exec_sum_from_reset);
 uC_ast_SUB:   assert property (p_exec_sub_from_reset);
+uC_ast_NOT:   assert property (p_exec_not_from_reset);
 uC_ast_JMP:   assert property (p_exec_jmp_from_reset);
 uC_ast_BC:    assert property (p_exec_branch_carry_from_reset);
 uC_ast_BEQ:   assert property (p_exec_branch_equal_from_reset);
