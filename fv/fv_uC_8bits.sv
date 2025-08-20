@@ -21,7 +21,12 @@ module fv_uC_8bits (
 
     input  logic         pc_load,
     input  logic [11:0]  pc_next,
-    input  logic         pc_inc
+    input  logic         pc_inc, 
+
+    input  logic         sram_write_en,
+    input  logic [5:0]   sram_addr,
+    input  logic [7:0]   sram_data_out,
+    input  logic [7:0]   sram_data_in
 );
     `include "includes.vh"
 
@@ -60,7 +65,6 @@ module fv_uC_8bits (
     @(posedge clk) disable iff (!arst_n)
         $rose(arst_n) |-> add_sequence |=> (alu_opcode==3'b000 && alu_result==add_result[7:0]);
     endproperty
-    assert property (p_exec_sum_from_reset);
 
 
     // =============================== SUB assert BlackBox 
@@ -92,7 +96,6 @@ module fv_uC_8bits (
     @(posedge clk) disable iff (!arst_n)
         $rose(arst_n) |-> sub_sequence |=> (alu_opcode==3'b001 && alu_result==sub_result[7:0]);
     endproperty
-    assert property (p_exec_sub_from_reset);
 
 
     // =============================== JMP assert BlackBox 
@@ -104,11 +107,15 @@ module fv_uC_8bits (
         .out(next_jump_reg)
     );
 
+    sequence jmp_sequence;
+        (flash_data == {4'h3, next_jump}) ##DELAY // JMP
+        (flash_data == 16'h0000); // NOP
+    endsequence
+
     property p_exec_jmp_from_reset;
     @(posedge clk) disable iff (!arst_n)
-        $rose(arst_n) |-> flash_data == {4'h3, next_jump} |-> ##3 (pc_out == next_jump_reg);
+        $rose(arst_n) |->  jmp_sequence |=> (pc_out == next_jump_reg);
     endproperty
-    assert property (p_exec_jmp_from_reset);
 
 
     // =============================== BC assert BlackBox 
@@ -117,14 +124,34 @@ module fv_uC_8bits (
         (flash_data == {8'h61, carry_a}) ##DELAY
         (flash_data == {8'h62, carry_b}) ##DELAY
         (flash_data == 16'h8312) ##DELAY // SUM
-        (flash_data == {4'h5, next_jump}); // BC
+        (flash_data == {4'h5, next_jump}) ##DELAY // BC
+        (flash_data == 16'h0000);
     endsequence
+
+    logic [7:0] carry_a_reg, carry_b_reg;
+    bus_shift #(.DELAY(9), .WIDTH(8)) carry_a_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(carry_a),
+        .out(carry_a_reg)
+    );
+    bus_shift #(.DELAY(7), .WIDTH(8)) carry_b_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(carry_b),
+        .out(carry_b_reg)
+    );
+
+    logic [8:0] carry_result;
+    assign carry_result = carry_b_reg + carry_a_reg;
+
+    assume property (@(posedge clk) disable iff (!arst_n)
+        bc_sequence |=> carry_result[8]);
 
     property p_exec_branch_carry_from_reset;
     @(posedge clk) disable iff (!arst_n)
-        $rose(arst_n) |-> bc_sequence |-> ##3 (add_result[8] && pc_out==next_jump_reg);
+        $rose(arst_n) |-> bc_sequence |=> (carry_result[8] && pc_out==next_jump_reg);
     endproperty
-    assert property (p_exec_branch_carry_from_reset);
 
     // =============================== BEQ assert BlackBox 
     logic [7:0] cmp_a, cmp_b;
@@ -132,16 +159,58 @@ module fv_uC_8bits (
         (flash_data == {8'h61, cmp_a}) ##DELAY
         (flash_data == {8'h62, cmp_b}) ##DELAY
         (flash_data == 16'hD012) ##DELAY // CMP
-        (flash_data == {4'h4, next_jump}); // BEQ
+        (flash_data == {4'h4, next_jump})  ##DELAY // BEQ
+        (flash_data == 16'h0000); 
     endsequence
+
+    logic [7:0] cmp_a_reg, cmp_b_reg;
+    bus_shift #(.DELAY(9), .WIDTH(8)) cmp_a_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(cmp_a),
+        .out(cmp_a_reg)
+    );
+    bus_shift #(.DELAY(7), .WIDTH(8)) cmp_b_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(cmp_b),
+        .out(cmp_b_reg)
+    );
+
+    assume property (@(posedge clk) disable iff (!arst_n)
+        1'b1 |-> cmp_a_reg == cmp_b_reg);
 
     property p_exec_branch_equal_from_reset;
     @(posedge clk) disable iff (!arst_n)
-        $rose(arst_n) |-> beq_sequence |=> (add_result[8] && pc_out==next_jump);
+        $rose(arst_n) |-> beq_sequence |=> (pc_out==next_jump_reg);
     endproperty
-    assert property (p_exec_branch_equal_from_reset);
 
-    // WhiteBox: suma y carry
+
+    // =============================== IN-STORE assert BlackBox 
+
+    sequence in_sequence;
+        (flash_data == 16'h3200) ##DELAY
+        (flash_data == 16'h6100) ##DELAY
+        (flash_data == 16'h2101);// SUM
+    endsequence
+
+    logic [7:0] in_reg;
+    bus_shift #(.DELAY(3), .WIDTH(8)) in_shifting (
+        .clk(clk),
+        .arst_n(arst_n),
+        .in(in),
+        .out(in_reg)
+    ); 
+
+    assume property (@(posedge clk) disable iff (!arst_n)
+    1'b1 |-> cmp_a_reg == cmp_b_reg);
+
+    property p_exec_in_from_reset;
+    @(posedge clk) disable iff (!arst_n)
+        $rose(arst_n) |-> in_sequence |=> sram_addr == 1'b1 |-> (in_reg == sram_data_in);
+    endproperty
+
+    // ============================ WhiteBox: suma y carry
     logic [8:0] sum;
     logic msb_sum_reg;
     assign sum = alu_a + alu_b;
@@ -162,6 +231,14 @@ module fv_uC_8bits (
         (alu_opcode == 3'b000) |-> ##DELAY,
         (carry_flag == msb_sum_reg)
     )
+
+uC_ast_ADD:   assert property (p_exec_sum_from_reset);
+uC_ast_SUB:   assert property (p_exec_sub_from_reset);
+uC_ast_JMP:   assert property (p_exec_jmp_from_reset);
+uC_ast_BC:    assert property (p_exec_branch_carry_from_reset);
+uC_ast_BEQ:   assert property (p_exec_branch_equal_from_reset);
+uC_ast_IN:    assert property (p_exec_in_from_reset);
+
 
 endmodule
 
