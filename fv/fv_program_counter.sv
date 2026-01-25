@@ -1,4 +1,4 @@
-module fv_program_counter (
+module fv_program_counter #(parameter ADDR_WIDTH = 12) (
 input  wire clk,
 input  wire clk_valid,
 input  wire arst_n,
