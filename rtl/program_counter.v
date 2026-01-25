@@ -1,6 +1,4 @@
-module program_counter #(
-    parameter ADDR_WIDTH = 12  
-)(
+module program_counter #(parameter ADDR_WIDTH = 12)(
     input  wire clk,
 	 input  wire clk_valid,
     input  wire arst_n,
