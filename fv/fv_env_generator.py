@@ -78,11 +78,15 @@ def fv_files_creation(storage, output_dir):
                 input_lines.append(f"bind {module_name} fv_{module_name} fv_{module_name}_i(.*);")
                 input_lines.append("")
 
+
         base_filename = "fv_" + os.path.splitext(os.path.basename(path))[0] + ".sv"
         if output_dir:
             new_filename = os.path.join(output_dir, base_filename)
         else:
             new_filename =  "fv_" + os.path.splitext(path)[0] + ".sv"
+        if os.path.exists(new_filename):
+            logger.warning(f"El archivo {new_filename} ya existe. Se omitirá la creación.")
+            continue
         try:
             os.makedirs(os.path.dirname(new_filename), exist_ok=True)
             with open(new_filename, 'w', encoding='utf-8') as f:
@@ -124,8 +128,8 @@ def makefile_creation(rtl_files_paths, output_dir):
     makefile_lines = []
     for rtl_path in rtl_files_paths:
         base_filename = os.path.splitext(os.path.basename(rtl_path))[0]
-        makefile_lines.append(f"{base_filename.lower()}_top:"),
-        makefile_lines.append(f"    jg jg_fpv.tcl -allow_unsupported_OS -define {base_filename.upper()}_TOP 1&")
+        makefile_lines.append(f"{base_filename.lower()}_top:")
+        makefile_lines.append(f"\tjg jg_fpv.tcl -allow_unsupported_OS -define {base_filename.upper()}_TOP 1&")
         makefile_lines.append("")
 
     makefile_path = os.path.join(output_dir if output_dir else ".", f"Makefile")
