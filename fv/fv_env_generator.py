@@ -34,6 +34,8 @@ def fv_files_creation(storage, output_dir):
         lines = content.splitlines()
         input_lines = []
         module_name = None
+
+        module_found = False
         for line in lines:
             stripped_line = line.strip()
             if stripped_line.startswith("//"):
@@ -42,6 +44,7 @@ def fv_files_creation(storage, output_dir):
 
             module_match = re.match(r'\s*module\s+(\w+)\s*(?:#\s*\((.*?)\))?', code_line, re.S)
             if module_match:
+                module_found = True
                 module_name = module_match.group(1)
                 module_params = module_match.group(2)
                 if module_params:
@@ -78,24 +81,27 @@ def fv_files_creation(storage, output_dir):
                 input_lines.append(f"bind {module_name} fv_{module_name} fv_{module_name}_i(.*);")
                 input_lines.append("")
 
-
-        base_filename = "fv_" + os.path.splitext(os.path.basename(path))[0] + ".sv"
-        if output_dir:
-            new_filename = os.path.join(output_dir, base_filename)
-        else:
-            new_filename =  "fv_" + os.path.splitext(path)[0] + ".sv"
-        if os.path.exists(new_filename):
-            logger.warning(f"El archivo {new_filename} ya existe. Se omitirá la creación.")
+        if not module_found:
+            logger.warning(f"No se encontró un módulo en el archivo {path}. Se omitirá la creación del archivo FV.")
             continue
-        try:
-            os.makedirs(os.path.dirname(new_filename), exist_ok=True)
-            with open(new_filename, 'w', encoding='utf-8') as f:
-                for input_line in input_lines:
-                    f.write(input_line + '\n')
-            logger.info(f"Archivo de inputs creado: {new_filename}")
-        except Exception:
-            logger.exception(f"No se pudo crear el archivo {new_filename}")
-            return 1
+        else:
+            base_filename = "fv_" + os.path.splitext(os.path.basename(path))[0] + ".sv"
+            if output_dir:
+                new_filename = os.path.join(output_dir, base_filename)
+            else:
+                new_filename =  "fv_" + os.path.splitext(path)[0] + ".sv"
+            if os.path.exists(new_filename):
+                logger.warning(f"El archivo {new_filename} ya existe. Se omitirá la creación.")
+                continue
+            try:
+                os.makedirs(os.path.dirname(new_filename), exist_ok=True)
+                with open(new_filename, 'w', encoding='utf-8') as f:
+                    for input_line in input_lines:
+                        f.write(input_line + '\n')
+                logger.info(f"Archivo de inputs creado: {new_filename}")
+            except Exception:
+                logger.exception(f"No se pudo crear el archivo {new_filename}")
+                return 1
     return 0
 
 def macros_creation(output_dir):
