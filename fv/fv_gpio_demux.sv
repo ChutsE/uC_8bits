@@ -1,8 +1,8 @@
 module fv_gpio_demux (
-input  wire [7:0] gpio_out,   
-input  wire       sel,        
-input reg  [7:0] port_a,    
-input reg  [7:0] port_b      
+input wire [7:0] gpio_out,
+input wire       sel,
+input reg  [7:0] port_a,
+input reg  [7:0] port_b
 );
   `ifdef GPIO_DEMUX_TOP 
     `define GPIO_DEMUX_ASM 1

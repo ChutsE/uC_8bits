@@ -1,10 +1,10 @@
 module fv_program_counter #(parameter ADDR_WIDTH = 12) (
-input  wire clk,
-input  wire clk_valid,
-input  wire arst_n,
-input  wire pc_inc,
-input  wire [ADDR_WIDTH-1:0] pc_next,  
-input  wire pc_load,
+input wire clk,
+input wire clk_valid,
+input wire arst_n,
+input wire pc_inc,
+input wire [ADDR_WIDTH-1:0] pc_next,
+input wire pc_load,
 input wire bootstrapping,
 input reg [ADDR_WIDTH-1:0] pc_out
 );
