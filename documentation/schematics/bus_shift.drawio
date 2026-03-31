@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="bus_shift" name="bus_shift">
-        <mxGraphModel dx="655" dy="649" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+        <mxGraphModel dx="542" dy="537" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -28,14 +28,14 @@
                 <mxCell id="in_label" value="in" style="text;align=left;verticalAlign=middle;fontSize=14;fontColor=light-dark(#000000,#FFFFFF);labelBackgroundColor=none;" parent="1" vertex="1">
                     <mxGeometry x="480" y="240" width="60" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="in_bus" style="endArrow=block;strokeWidth=2;strokeColor=default;labelBackgroundColor=none;fontColor=light-dark(#000000,#FFFFFF);exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" edge="1" source="in_label">
+                <mxCell id="in_bus" style="endArrow=block;strokeWidth=2;strokeColor=default;labelBackgroundColor=none;fontColor=light-dark(#000000,#FFFFFF);exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="in_label" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="250" as="sourcePoint"/>
                         <mxPoint x="620" y="250" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="in_macro" value="WIDTH" style="text;align=center;verticalAlign=top;fontSize=8;fontStyle=2;fontColor=light-dark(#000000,#B3B3B3);labelBackgroundColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="550" y="252" width="120" height="16" as="geometry"/>
+                <mxCell id="in_macro" value="2" style="text;align=center;verticalAlign=top;fontSize=8;fontStyle=2;fontColor=light-dark(#000000,#B3B3B3);labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="252" width="60" height="16" as="geometry"/>
                 </mxCell>
                 <mxCell id="slash_in" value="" style="endArrow=none;html=1;rounded=0;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -52,13 +52,13 @@
                         <mxPoint x="890" y="222" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="out_macro" value="WIDTH" style="text;align=center;verticalAlign=top;fontSize=8;fontStyle=2;fontColor=light-dark(#000000,#B3B3B3);labelBackgroundColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="760" y="224" width="120" height="16" as="geometry"/>
+                <mxCell id="out_macro" value="2" style="text;align=center;verticalAlign=top;fontSize=8;fontStyle=2;fontColor=light-dark(#000000,#B3B3B3);labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="224" width="80" height="16" as="geometry"/>
                 </mxCell>
                 <mxCell id="slash_out" value="" style="endArrow=none;html=1;rounded=0;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="860" y="227" as="sourcePoint"/>
-                        <mxPoint x="850" y="217" as="targetPoint"/>
+                        <mxPoint x="845" y="227" as="sourcePoint"/>
+                        <mxPoint x="835" y="217" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
             </root>
