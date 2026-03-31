@@ -5,11 +5,6 @@ set_proofgrid_bridge off
 set fv_analyze_options { -sv12 }
 set design_top shifting_cell
 
-if {[info exists FLIPFLOP_TOP]} {
-  lappend fv_analyze +define+FLIPFLOP_TOP
-  set design_top flipflop
-}
-
 if {[info exists PROGRAM_COUNTER_TOP]} {
   lappend fv_analyze +define+PROGRAM_COUNTER_TOP
   set design_top program_counter
@@ -43,11 +38,6 @@ if {[info exists CONTROL_UNIT_TOP]} {
 if {[info exists SRAM_64X8_TOP]} {
   lappend fv_analyze +define+SRAM_64X8_TOP
   set design_top sram_64x8
-}
-
-if {[info exists SHIFT_TOP]} {
-  lappend fv_analyze +define+SHIFT_TOP
-  set design_top shift
 }
 
 analyze [join $fv_analyze_options] -f analyze.flist

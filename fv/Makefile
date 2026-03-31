@@ -1,6 +1,3 @@
-flipflop_top:
-	jg jg_fpv.tcl -allow_unsupported_OS -define FLIPFLOP_TOP 1&
-
 program_counter_top:
 	jg jg_fpv.tcl -allow_unsupported_OS -define PROGRAM_COUNTER_TOP 1&
 
@@ -21,7 +18,3 @@ control_unit_top:
 
 sram_64x8_top:
 	jg jg_fpv.tcl -allow_unsupported_OS -define SRAM_64X8_TOP 1&
-
-shift_top:
-	jg jg_fpv.tcl -allow_unsupported_OS -define SHIFT_TOP 1&
-
