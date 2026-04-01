@@ -1,4 +1,4 @@
-module fv_bus_shift #(parameter DELAY=4, WIDTH=10) (
+module fv_bus_shift #(parameter DELAY=2, WIDTH=2) (
 input clk,
 input arst_n,
 input [WIDTH-1:0] in,
@@ -10,8 +10,18 @@ input [WIDTH-1:0] out
     `define BUS_SHIFT_ASM 0
   `endif
   
-  // Here add yours AST, COV, ASM, REUSE etc.
+  //the in must not be unknown
+  `ROLE(BUS_SHIFT_TOP,
+    bus_shift, in_known_ast,
+    1'b1 |=>,
+    in != {WIDTH{1'bx}})
   
+  //the in must to be the same of out on the second next time . 
+  `ROLE(BUS_SHIFT_TOP,
+    bus_shift, shift_ast,
+    1'b1 |=> ##DELAY,
+    out == in)
+
 endmodule
 
 bind bus_shift fv_bus_shift fv_bus_shift_i(.*);
