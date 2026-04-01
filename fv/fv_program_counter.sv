@@ -8,14 +8,15 @@ input wire pc_load,
 input wire bootstrapping,
 input reg [ADDR_WIDTH-1:0] pc_out
 );
+
   `ifdef PROGRAM_COUNTER_TOP 
     `define PROGRAM_COUNTER_ASM 1
   `else
     `define PROGRAM_COUNTER_ASM 0
   `endif
   
-  `define BOOTSTRAP_THRESHOLD 12'h200
-  `define PROGRAM_COUNTER_LIMIT 12'hFFFFFF
+  localparam BOOTSTRAP_THRESHOLD = 12'h200;
+  localparam PROGRAM_COUNTER_LIMIT = 12'hFFFFFF;
 
   //rose clk_valid  and pc_out  is lower than 0x200 the bootstrapping must to be high
   `AST(program_counter, bootstraping_hi, 
@@ -27,28 +28,28 @@ input reg [ADDR_WIDTH-1:0] pc_out
     $rose(clk_valid) && (pc_out >>  BOOTSTRAP_THRESHOLD)|->,
     bootstrapping == 1'b0)
 
-  //rose clk_valid  and pc_inc  is high the pc_out must to be increase one on the next time.
-  `ROLE(PROGRAM_COUNTER_TOP, 
+  //rose clk_valid  and pc_inc is high and pc_load is low the pc_out must to be increase one on the next time.
+  `ROLE(`PROGRAM_COUNTER_ASM, 
     program_counter, inc_ast, 
-    $rose(clk_valid) && pc_inc == 1'b1 |=>,
-    pc_out == pc_out + 1)
+    $rose(clk_valid) && pc_inc == 1'b1 && pc_load == 1'b0 |=>,
+    pc_out == $past(pc_out, 1) + 1)
 
-  //rose clk_valid  and pc_load  is high the pc_out must to be equal to pc_next on next time.
-  `ROLE(PROGRAM_COUNTER_TOP, 
+  //rose clk_valid  and pc_load is high and pc_inc is low the pc_out must to be equal to pc_next on next time.
+  `ROLE(`PROGRAM_COUNTER_ASM, 
     program_counter, load_ast, 
-    $rose(clk_valid) && pc_load == 1'b1 |=>,
-    pc_out == pc_next)
+    $rose(clk_valid) && pc_load == 1'b1 && pc_inc == 1'b0 |=>,
+    pc_out == $past(pc_next, 1))
 
   //rose clk_valid, then pc_inc and pc_load must not to be equal
-  `ROLE(PROGRAM_COUNTER_TOP, 
+  `ROLE(`PROGRAM_COUNTER_ASM, 
     program_counter, inc_load_ast, 
     $rose(clk_valid) |=>,
     !(pc_inc == 1'b1 && pc_load == 1'b1))
   
   //pc_out is 0xFFFFFF the pc_out must to be zero on next time.
   `COV(program_counter, limit, 
-    pc_out == `PROGRAM_COUNTER_LIMIT |=>,
-    pc_out == 0')
+    pc_out == PROGRAM_COUNTER_LIMIT |=>,
+    pc_out == '0)
 
 endmodule
 

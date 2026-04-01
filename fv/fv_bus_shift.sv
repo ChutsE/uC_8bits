@@ -11,16 +11,16 @@ input [WIDTH-1:0] out
   `endif
   
   //the in must not be unknown
-  `ROLE(BUS_SHIFT_TOP,
+  `ROLE(`BUS_SHIFT_ASM,
     bus_shift, in_known_ast,
-    1'b1 |=>,
-    in != {WIDTH{1'bx}})
+    1'b1 |->,
+    !$isunknown(in))
   
   //the in must to be the same of out on the second next time . 
-  `ROLE(BUS_SHIFT_TOP,
+  `ROLE(`BUS_SHIFT_ASM,
     bus_shift, shift_ast,
-    1'b1 |=> ##DELAY,
-    out == in)
+    1'b1 |-> ##DELAY,
+    out == $past(in, DELAY))
 
 endmodule
 

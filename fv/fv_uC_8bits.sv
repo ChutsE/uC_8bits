@@ -1,4 +1,4 @@
-module fv_uC_8bits (
+module fv_uc_8bits (
 input wire        clk,
 input wire        clk_valid,
 input wire        arst_n,
@@ -21,5 +21,5 @@ input wire        out_select
   
 endmodule
 
-bind uC_8bits fv_uC_8bits fv_uC_8bits_i(.*);
+bind uc_8bits fv_uc_8bits fv_uc_8bits_i(.*);
 

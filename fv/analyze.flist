@@ -7,7 +7,6 @@
 ./property_defines.svh
 
 # RTL design files
-../rtl/flipflop.v
 ../rtl/program_counter.v
 ../rtl/uC_8bits.v
 ../rtl/alu.v
@@ -15,10 +14,8 @@
 ../rtl/bus_shift.v
 ../rtl/control_unit.v
 ../rtl/sram_64x8.v
-../rtl/shift.v
 
 # Formal verification files
-./fv_flipflop.sv
 ./fv_program_counter.sv
 ./fv_uC_8bits.sv
 ./fv_alu.sv
@@ -26,4 +23,3 @@
 ./fv_bus_shift.sv
 ./fv_control_unit.sv
 ./fv_sram_64x8.sv
-./fv_shift.sv

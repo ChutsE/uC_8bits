@@ -1,4 +1,4 @@
-module uC_8bits (
+module uc_8bits (
     input wire        clk,
 	input wire        clk_valid,
     input wire        arst_n,
