@@ -17,17 +17,22 @@ input reg [7:0] memory [0:63]
     `define SRAM_64X8_ASM 0
   `endif
 
-  //rose clk_valid  and  sram_write_en low, sram_data_in must to be the same to memory[sram_addr] on the next time
+
+  `ASM(program_counter, clk_valid, 
+     1'b1 |->,
+     clk_valid == 1'b1)
+
+  //sram_write_en low, sram_data_in must to be the same to memory[sram_addr] on the next time
   `ROLE(`SRAM_64X8_ASM, 
     sram_64x8, read_ast, 
-    $rose(clk_valid) && sram_write_en == 1'b0 |=>,
-    sram_data_in == $past(memory[sram_addr], 1))
+    sram_write_en == 1'b0 |->,
+    sram_data_in == memory[sram_addr])
 
-  //rose clk_valid  and  sram_write_en high,   sram_data_out must to be the same to memory[sram_addr] on the next time
+  //sram_write_en high,  memory[sram_addr]  must to be the same to sram_data_out on the next time
   `ROLE(`SRAM_64X8_ASM, 
     sram_64x8, write_ast, 
-    $rose(clk_valid) && sram_write_en == 1'b1 |=>,
-    sram_data_out == $past(memory[sram_addr], 1))
+    sram_write_en == 1'b1 |=>,
+    memory[$past(sram_addr)] == $past(sram_data_out))
 
 endmodule
 

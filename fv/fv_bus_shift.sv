@@ -1,4 +1,4 @@
-module fv_bus_shift #(parameter DELAY=2, WIDTH=2) (
+module fv_bus_shift #(parameter DELAY=1, WIDTH=2) (
 input clk,
 input arst_n,
 input [WIDTH-1:0] in,
