@@ -17,20 +17,19 @@ input reg [7:0] memory [0:63]
     `define SRAM_64X8_ASM 0
   `endif
 
-
-  `ASM(program_counter, clk_valid, 
-     1'b1 |->,
-     clk_valid == 1'b1)
+  //clk_valid must to be 1'b1 always
+  `ROLE( `SRAM_64X8_ASM,
+    sram_64x8, clk_valid, 
+    1'b1 |->,
+    clk_valid == 1'b1)
 
   //sram_write_en low, sram_data_in must to be the same to memory[sram_addr] on the next time
-  `ROLE(`SRAM_64X8_ASM, 
-    sram_64x8, read_ast, 
+  `AST(sram_64x8, read_ast, 
     sram_write_en == 1'b0 |->,
     sram_data_in == memory[sram_addr])
 
-  //sram_write_en high,  memory[sram_addr]  must to be the same to sram_data_out on the next time
-  `ROLE(`SRAM_64X8_ASM, 
-    sram_64x8, write_ast, 
+  //sram_write_en high, memory[sram_addr]  must to be the same to sram_data_out on the next time
+  `AST(sram_64x8, write_ast, 
     sram_write_en == 1'b1 |=>,
     memory[$past(sram_addr)] == $past(sram_data_out))
 

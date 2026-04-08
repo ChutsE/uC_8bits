@@ -58,92 +58,102 @@ input reg [7:0] registers [0:15]
   localparam LSHT = 4'b1110;
   localparam RSHT = 4'b1111;
 
+  localparam PORT0 = 1'b0;
+  localparam PORT1 = 1'b1;
   localparam STATE_FETCH = 1'b0;
   localparam STATE_EXECUTE = 1'b1;
 
-  `ASM(program_counter, clk_valid, 
-     1'b1 |->,
-     clk_valid == 1'b1)
+  //clk_valid must to be 1'b1 always
+  `ROLE(`CONTROL_UNIT_ASM,
+    control_unit, clk_valid, 
+    1'b1 |->,
+    clk_valid == 1'b1)
 
-  //rose clk_valid and instr_opcode equal to NOP, all output signals must to keep the values.
-  `AST(control_unit, nop_ast, 
+  //when instr_opcode equal to NOP,all output signals must to keep the values.
+  `AST(control_unit, nop, 
     instr_opcode == NOP && (state == STATE_FETCH) |=> ,
-    {sram_write_en, pc_load, pc_next, out_gpio} == $past({sram_write_en, pc_load, pc_next, out_gpio}))
+    {sram_write_en, pc_load, pc_next, out_gpio, out_port} ==  \
+    $past({sram_write_en, pc_load, pc_next, out_gpio, out_port}))
 
-  //rose clk_valid and instr_opcode equal to LOAD,  memory[{reg_2, reg_1}] must to be equal to   registers[reg_dst] on the next time.
-  //AST(control_unit, load_ast, 
+  //when instr_opcode equal to LOAD, memory[{reg_2, reg_1}] must to be equal to  registers[reg_dst] on the next time.
+  //AST(control_unit, load, 
   //   instr_opcode == LOAD |=>,
   //  memory[{reg_2, reg_1}] == $past(registers[reg_dst], 1))
 
-  //rose clk_valid and instr_opcode equal to STORE,   registers[reg_dst] must to be equal to  memory[{reg_2, reg_1}] on the next time.
-  //`AST(control_unit, store_ast, 
+  //when instr_opcode equal to STORE, registers[reg_dst] must to be equal to  memory[{reg_2, reg_1}] on the next time.
+  //`AST(control_unit, store, 
   //   instr_opcode == STORE |=>,
   //  registers[reg_dst] == $past(memory[{reg_2, reg_1}], 1))
 
-  //rose clk_valid and instr_opcode equal to JMP,   pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
-  `AST(control_unit, jmp_ast, 
+  //when instr_opcode equal to JMP pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
+  `AST(control_unit, jmp, 
      (instr_opcode == JMP) && (state == STATE_FETCH) |-> ##DELAY,
     pc_next == $past({reg_dst, reg_1, reg_2}, DELAY))
 
-  //rose clk_valid and instr_opcode equal to BEQ and equal is high,   pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
-  `AST(control_unit, beq_ast, 
+  //when instr_opcode equal to BEQ and equal is high,   pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
+  `AST(control_unit, beq, 
      (instr_opcode == BEQ)  && (state == STATE_FETCH) && (equal == 1'b1) |-> ##DELAY,
     pc_next == $past({reg_dst, reg_1, reg_2}, DELAY))
 
-  //rose clk_valid and instr_opcode equal to BC and carry_out is high,  pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
-  `AST(control_unit, bc_ast, 
+  //when instr_opcode equal to BC and carry_out is high,  pc_next must to be equal to {reg_dst, reg_2, reg_1} on the next time.
+  `AST(control_unit, bc, 
      (instr_opcode == BC) && (state == STATE_FETCH) && (carry_out == 1'b1) |-> ##DELAY,
     pc_next == $past({reg_dst, reg_1, reg_2}, DELAY))
 
-  //rose clk_valid and instr_opcode equal to IN and pc_next < BOOTSTRAP_THRESHOLD , in_gpio   must to be equal to [reg_dst] on the next time.
-  `AST(control_unit, in_bootstrapping_ast, 
+  //when instr_opcode equal to IN and pc_next < BOOTSTRAP_THRESHOLD , in_gpio   must to be equal to [reg_dst] on the next time.
+  `AST(control_unit, in_bootstrapping, 
      (instr_opcode == IN) && (state == STATE_FETCH) |=> (bootstrapping == 1'b1) |=>,
     registers[$past(reg_dst, DELAY)] == $past({reg_1, reg_2}, DELAY))
 
-  //rose clk_valid and instr_opcode equal to IN and pc_next > BOOTSTRAP_THRESHOLD , {reg_2, reg_1} must to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, in_ast, 
+  //when instr_opcode equal to IN and pc_next > BOOTSTRAP_THRESHOLD , {reg_2, reg_1} must to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, in, 
      (instr_opcode == IN) && (state == STATE_FETCH) |=> (bootstrapping == 1'b0) |=>,
     registers[$past(reg_dst, DELAY)] == $past(in_gpio, DELAY))
     
-  //rose clk_valid and instr_opcode equal to OUT,  registers[reg_dst] must to be equal to out_gpio on the next time.
-  `AST(control_unit, out_ast, 
-     (instr_opcode == OUT) && (state == STATE_FETCH) |-> ##DELAY,
-    out_gpio == $past(registers[reg_dst], DELAY))
+  //when instr_opcode equal to OUT, registers[reg_dst] must to be equal to out_gpio on the next time.
+  `AST(control_unit, out_port0, 
+     (instr_opcode == OUT) && (state == STATE_FETCH) && (reg_2 == PORT0)|-> ##DELAY,
+    out_gpio == $past(registers[reg_dst], DELAY) && out_port == PORT0)
 
-  //rose clk_valid and instr_opcode equal to ADD, registers[reg_1] +  registers[reg_2] must  to be equal to {carry_out,  registers[reg_dst]}on the next time.
+  //when instr_opcode equal to OUT, registers[reg_dst] must to be equal to out_gpio on the next time.
+  `AST(control_unit, out_port1, 
+     (instr_opcode == OUT) && (state == STATE_FETCH) && (reg_2 == PORT1)|-> ##DELAY,
+    out_gpio == $past(registers[reg_dst], DELAY) && out_port == PORT1)
+
+  //when instr_opcode equal to ADD, registers[reg_1] +  registers[reg_2] must  to be equal to {carry_out,  registers[reg_dst]}on the next time.
   logic [8:0] add;
   assign add = registers[reg_1] + registers[reg_2];
-  `AST(control_unit, add_ast, 
+  `AST(control_unit, add, 
      (instr_opcode == ADD) && (state == STATE_FETCH) |-> ##DELAY,
     {carry_out, registers[$past(reg_dst, DELAY)]} == $past(add, DELAY))
     
-  //rose clk_valid and instr_opcode equal to SUB,  registers[reg_1] -  registers[reg_2] must  to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, sub_ast, 
+  //when instr_opcode equal to SUB, registers[reg_1] -  registers[reg_2] must  to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, sub, 
      (instr_opcode == SUB) && (state == STATE_FETCH) |-> ##DELAY,
     registers[$past(reg_dst, DELAY)] == $past(registers[reg_1] - registers[reg_2], DELAY))
 
-  //rose clk_valid and instr_opcode equal to OR,   registers[reg_1] |  registers[reg_2] must  to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, or_ast, 
+  //when instr_opcode equal to OR,  registers[reg_1] |  registers[reg_2] must  to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, or, 
      (instr_opcode == OR) && (state == STATE_FETCH) |-> ##DELAY,
     registers[$past(reg_dst, DELAY)] == $past(registers[reg_1] | registers[reg_2], DELAY))
 
-  //rose clk_valid and instr_opcode equal to NOT,  ~registers[reg_1] must  to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, not_ast, 
+  //when instr_opcode equal to NOT, ~registers[reg_1] must  to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, not, 
      (instr_opcode == NOT) && (state == STATE_FETCH) |-> ##DELAY,
     registers[$past(reg_dst, DELAY)] == $past(~registers[reg_1], DELAY))
   
-  //rose clk_valid and instr_opcode equal to CMP,  if registers[reg_1] is equal to registers[reg_2],  equal signal will rise on the next time.
-  `AST(control_unit, cmp_equal_ast, 
+  //when instr_opcode equal to CMP, if registers[reg_1] is equal to registers[reg_2],  equal signal will rise on the next time.
+  `AST(control_unit, cmp_equal, 
      (instr_opcode == CMP) && (state == STATE_FETCH) && (registers[reg_1] == registers[reg_2]) |-> ##DELAY,
     equal == 1'b1)
 
-  //rose clk_valid and instr_opcode equal to LSHT,  registers[reg_1] <<  reg_2 must  to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, lsht_ast, 
+  //when instr_opcode equal to LSHT, registers[reg_1] <<  reg_2 must  to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, lsht, 
      (instr_opcode == LSHT) && (state == STATE_FETCH) |-> ##DELAY,
     registers[$past(reg_dst, DELAY)] == $past(registers[reg_1] << registers[reg_2], DELAY))
 
-  //rose clk_valid and instr_opcode equal to RSHT,  registers[reg_1] >>  reg_2 must  to be equal to registers[reg_dst] on the next time.
-  `AST(control_unit, rsht_ast, 
+  //when instr_opcode equal to RSHT,registers[reg_1] >>  reg_2 must  to be equal to registers[reg_dst] on the next time.
+  `AST(control_unit, rsht, 
      (instr_opcode == RSHT) && (state == STATE_FETCH) |-> ##DELAY,
     registers[$past(reg_dst, DELAY)] == $past(registers[reg_1] >> registers[reg_2], DELAY))
   

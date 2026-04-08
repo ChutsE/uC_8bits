@@ -17,7 +17,9 @@ input wire        out_select
     `define UC_8BITS_ASM 0
   `endif
   
-  // Here add yours AST, COV, ASM, REUSE etc.
+  `ASM(uc_8bits, clk_valid, 
+    1'b1 |->,
+    clk_valid == 1'b1)
   
 endmodule
 
