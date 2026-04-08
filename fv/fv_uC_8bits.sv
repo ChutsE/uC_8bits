@@ -17,33 +17,34 @@ input wire        out_select
     `define UC_8BITS_ASM 0
   `endif
 
-  localparam DELAY = 2;
+  localparam DELAY = 3;
   localparam LOAD = 4'b0001;
   localparam STORE = 4'b0010;
   localparam STATE_FETCH = 1'b0;
   
-  wire [3:0] instr_opcode, reg_dst, reg_1, reg_2;  
-
+  wire [3:0] instr_opcode, reg_idx;  
+  wire [5:0] sram_idx;
   assign instr_opcode = flash_data[15:12];
-  assign reg_dst = flash_data[11:8];
-  assign reg_1 = flash_data[7:4];
-  assign reg_2 = flash_data[3:0];
+  assign reg_idx = flash_data[11:8];
+  assign sram_idx = flash_data[5:0];
 
   `ASM(uc, clk_valid, 
     1'b1 |->,
     clk_valid == 1'b1)
 
-  //when instr_opcode is equal to LOAD and state is equal to STATE_FETCH,  
-  //memory[{reg_2, reg_1}] must to be equal to registers[reg_dst] on the next time.
+  //when instr_opcode is equal to LOAD and state is equal to STATE_FETCH, 
+  //registers[reg_idx] must to be equal to  memory[{reg_2, reg_1}] on the next time.
   `AST(uc, load, 
-    instr_opcode == LOAD  && (cu_state == STATE_FETCH) |-> ##DELAY,
-    uc_8bits.sram_64x8.memory[{reg_1, reg_2}] == $past(uc_8bits.control_unit.registers[reg_dst], DELAY))
+    instr_opcode == LOAD && (cu_state == STATE_FETCH) |-> ##DELAY,
+    uc_8bits.CU.registers[$past(reg_idx, DELAY)] == $past(uc_8bits.SRAM.memory[sram_idx], DELAY))
 
-  //when instr_opcode is equal to STORE and state is equal to STATE_FETCH, 
-  //registers[reg_dst] must to be equal to  memory[{reg_2, reg_1}] on the next time.
+  //when instr_opcode is equal to STORE and state is equal to STATE_FETCH,  
+  //memory[{reg_2, reg_1}] must to be equal to registers[reg_idx] on the next time.
   `AST(uc, store, 
-    instr_opcode == STORE && (cu_state == STATE_FETCH) |-> ##DELAY,
-    uc_8bits.control_unit.registers[reg_dst] == $past(uc_8bits.sram_64x8.memory[{reg_1, reg_2}], DELAY))
+    instr_opcode == STORE  && (cu_state == STATE_FETCH) |-> ##DELAY,
+    uc_8bits.SRAM.memory[$past(sram_idx, DELAY)] == $past(uc_8bits.CU.registers[reg_idx], DELAY))
+
+
 
   
 endmodule
