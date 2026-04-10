@@ -17,7 +17,7 @@ input wire        out_select
     `define UC_8BITS_ASM 0
   `endif
 
-  localparam DELAY = 3;
+  localparam DELAY = 2;
   localparam LOAD = 4'b0001;
   localparam STORE = 4'b0010;
   localparam STATE_FETCH = 1'b0;

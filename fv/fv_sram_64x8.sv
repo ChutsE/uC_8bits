@@ -25,8 +25,8 @@ input reg [7:0] memory [0:63]
 
   //sram_write_en low, sram_data_in must to be the same to memory[sram_addr] on the next time
   `AST(sram_64x8, read_ast, 
-    sram_write_en == 1'b0 |->,
-    sram_data_in == memory[sram_addr])
+    sram_write_en == 1'b0 |=>,
+    sram_data_in == $past(memory[sram_addr]))
 
   //sram_write_en high, memory[sram_addr]  must to be the same to sram_data_out on the next time
   `AST(sram_64x8, write_ast, 
