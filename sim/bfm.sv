@@ -23,7 +23,7 @@ interface uc8_bfm_if #(parameter ADDR_WIDTH = 8,
   logic out_select;
 
   // Memoria modelo
-  logic [7:0] program_mem [0:255];
+  logic [15:0] program_mem [0:255];
 
   // Clock
   task automatic start_clock();
@@ -34,23 +34,23 @@ interface uc8_bfm_if #(parameter ADDR_WIDTH = 8,
   // Reset
   task automatic reset_dut();
     arst_n = 0;
-    clk_valid = 1'b1;
+    clk_valid = 1'b0;
     in_gpio = '0;
     repeat (5) @(posedge clk);
     arst_n = 1;
-    repeat (2) @(posedge clk);
+    clk_valid = 1'b1;
   endtask
 
   // Cargar instrucción de 16 bits en memoria de 8 bits
   task automatic load_instr(input int addr, input logic [15:0] instr);
-    program_mem[addr]     = instr[15:8]; // byte alto
-    program_mem[addr + 1] = instr[7:0];  // byte bajo
+    program_mem[addr]     = instr[15:0]; // byte alto
+
   endtask
 
   // Limpiar memoria
   task automatic clear_program_mem();
     for (int i = 0; i < 256; i++) begin
-      program_mem[i] = 8'h00;
+      program_mem[i] = 16'h0000;
     end
   endtask
 
